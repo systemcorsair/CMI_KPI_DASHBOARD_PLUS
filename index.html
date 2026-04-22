@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMI · KPI Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f3ef;--sf:#fff;--sf2:#eeede8;
+  --bd:#dddcd5;--bd2:#c8c7bf;
+  --tx:#1a1a17;--mu:#68675f;--hi:#a0a099;
+  --bl:#1255a0;--bl-bg:#e7f0fb;--bl-lt:#c4d8f4;
+  --gn:#0b6b4e;--gn-bg:#dff3ec;
+  --am:#7a4a08;--am-bg:#faebd5;
+  --rd:#9c2828;--rd-bg:#fbe9e9;
+  --lw:280px;--th:46px;--r:7px;--rl:11px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:13px;background:var(--bg);color:var(--tx);min-height:100vh;overflow:hidden}
+input,button,select,textarea{font-family:inherit;font-size:13px}
+button{cursor:pointer}
+.hidden{display:none!important}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+
+/* ── LOGIN ── */
+#pg-login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.lcard{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);padding:36px;width:340px}
+.lbrand{font-size:22px;font-weight:700;margin-bottom:3px}
+.lsub{color:var(--mu);font-size:12px;margin-bottom:26px}
+.lf{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.lf label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--mu)}
+.lf input{padding:9px 11px;border:1px solid var(--bd);border-radius:var(--r);
+  background:var(--sf);color:var(--tx);font-size:14px}
+.lf input:focus{outline:none;border-color:var(--bl);box-shadow:0 0 0 3px rgba(18,85,160,.1)}
+#btn-login{width:100%;padding:10px;background:var(--bl);color:#fff;border:none;
+  border-radius:var(--r);font-size:14px;font-weight:600;margin-top:4px}
+#btn-login:hover{opacity:.88}
+#l-err{color:var(--rd);font-size:12px;margin-top:8px;padding:7px 10px;
+  background:var(--rd-bg);border-radius:var(--r);display:none}
+.lhint{margin-top:18px;padding-top:14px;border-top:1px solid var(--bd);
+  font-size:11px;color:var(--hi);line-height:1.6}
+.lhint b{color:var(--mu)}
+
+/* ── TOPBAR ── */
+.topbar{height:var(--th);background:var(--sf);border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  position:fixed;top:0;left:0;right:0;z-index:100}
+.tlogo{font-weight:700;font-size:14px}
+.tlogo span{color:var(--mu);font-weight:400}
+.tright{display:flex;align-items:center;gap:10px}
+/* FIX #2: sync badge is now muted/subtle */
+#sync-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:400;
+  color:var(--hi);background:transparent;cursor:pointer;border:none;
+  transition:color .2s}
+#sync-badge:hover{color:var(--mu)}
+/* FIX #3a: t-badge = dept abbreviation badge (e.g. "HR")
+   To remove: comment out the line   el('t-badge').textContent = U.dept;  in startApp() */
+.tbadge{font-size:11px;font-weight:600;padding:2px 9px;border-radius:12px}
+.tba{background:var(--bl-bg);color:var(--bl)}
+.tbm{background:var(--am-bg);color:var(--am)}
+/* FIX #3b: t-name = user's full name text (e.g. "Ms Chau")
+   To remove: comment out the line   el('t-name').textContent = U.name;  in startApp() */
+.tav{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:11px;font-weight:700}
+#btn-logout{padding:5px 11px;border-radius:var(--r);border:1px solid var(--bd2);
+  background:transparent;color:var(--mu);font-size:11px}
+#btn-logout:hover{background:var(--sf2);color:var(--tx)}
+
+/* ── SHELL ── */
+#pg-app{display:none;flex-direction:column}
+.shell{display:flex;height:calc(100vh - var(--th));margin-top:var(--th)}
+.lp{width:var(--lw);flex-shrink:0;background:var(--sf);border-right:1px solid var(--bd);
+  overflow:hidden;display:flex;flex-direction:column}
+.lp-sc{flex:1;overflow-y:auto;padding:0 0 14px 0}
+.rp{flex:1;min-width:0;overflow-y:auto;padding:0 20px 18px;background:var(--bg)}
+.lsec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--hi);margin:14px 0 7px}
+.lsec:first-child{margin-top:0}
+
+/* ── DATE RANGE ── */
+.dr-box{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);
+  padding:10px 11px;margin-bottom:4px}
+.dr-quick{display:flex;gap:4px;margin-bottom:8px}
+.drq{padding:3px 9px;border-radius:12px;border:1px solid var(--bd);
+  background:transparent;color:var(--mu);font-size:10px;font-weight:600;cursor:pointer}
+.drq:hover,.drq.act{background:var(--bl);color:#fff;border-color:var(--bl)}
+.dr-row{display:flex;gap:5px;align-items:center;margin-bottom:6px}
+.dr-row label{font-size:10px;color:var(--mu);width:26px;font-weight:600;flex-shrink:0}
+.drsel,.mysel{flex:1;padding:5px 7px;border:1px solid var(--bd);border-radius:var(--r);
+  background:var(--sf);color:var(--tx);font-size:11px}
+.dr-apply{width:100%;padding:6px;border:none;border-radius:var(--r);
+  background:var(--bl);color:#fff;font-size:11px;font-weight:600;cursor:pointer;margin-top:3px}
+
+/* ── ACCORDION ── */
+.acc{border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:6px}
+.acc-h{display:flex;align-items:center;gap:7px;padding:9px 10px;cursor:pointer;
+  user-select:none;transition:background .12s}
+.acc-h:hover,.acc-h.open{background:var(--bl-bg)}
+.ah-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ah-info{flex:1;min-width:0}
+.ah-name{font-weight:600;font-size:12px;line-height:1.2}
+/* FIX #5: last data month shown under dept name */
+.ah-last{font-size:10px;color:var(--hi);margin-top:1px}
+.ah-last.ok{color:var(--gn)}
+.ah-last.warn{color:var(--am)}
+.ah-last.miss{color:var(--rd)}
+.ah-st{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.st-ok{background:#1D9E75}.st-pend{background:#EF9F27}
+.ah-ch{font-size:9px;color:var(--hi);transition:transform .2s;flex-shrink:0}
+.ah-ch.open{transform:rotate(90deg)}
+.acc-b{display:none;border-top:1px solid var(--bd);background:var(--sf2);padding:10px 11px}
+.acc-b.open{display:block}
+.ks-row{display:flex;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--bd)}
+.ks-row:last-of-type{border-bottom:none}
+.ks-l{font-size:11px;color:var(--mu);flex:1}
+.ks-v{font-size:12px;font-weight:600}
+.ks-d{font-size:10px;margin-left:4px}
+.du{color:var(--gn)}.dd{color:var(--rd)}.dn{color:var(--hi)}
+.ks-cmt{margin-top:7px;padding:6px 8px;background:var(--sf);border-radius:var(--r);
+  font-size:11px;color:var(--mu);font-style:italic;line-height:1.4;border:1px solid var(--bd)}
+.vc-btn{width:100%;margin-top:8px;padding:6px;border-radius:var(--r);
+  border:1px solid var(--bl-lt);background:var(--bl-bg);color:var(--bl);
+  font-size:11px;font-weight:600;cursor:pointer}
+.vc-btn:hover{background:var(--bl-lt)}
+
+/* ── INPUT FORM ── */
+.my-row{display:flex;gap:6px;margin-bottom:11px}
+.mysel{padding:7px 8px;font-size:12px;font-weight:500}
+.inp-st{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;padding:6px 9px;border-radius:var(--r);
+  background:var(--sf2);border:1px solid var(--bd)}
+.badge{display:inline-flex;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+.bg{background:var(--gn-bg);color:var(--gn)}
+.ba{background:var(--am-bg);color:var(--am)}
+.ki-list{display:flex;flex-direction:column;gap:9px;margin-bottom:12px}
+.ki{display:flex;flex-direction:column;gap:3px}
+.ki label{font-size:11px;color:var(--mu);font-weight:600}
+/* delta row inside each KPI input */
+.ki-lbl-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.ki-lbl-row label{margin-bottom:0}
+.ki-delta{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;white-space:nowrap}
+.ki-delta.du{background:var(--gn-bg);color:var(--gn)}
+.ki-delta.dd{background:var(--rd-bg);color:var(--rd)}
+.ki-delta.dn{color:var(--hi)}
+.ki-vs{font-weight:400;font-size:10px}
+/* Change password button */
+.chpw-btn{width:100%;padding:7px;border-radius:var(--r);border:1px solid var(--bd2);
+  background:transparent;color:var(--mu);font-size:12px;cursor:pointer;margin-top:2px;text-align:left}
+.chpw-btn:hover{background:var(--sf2);color:var(--tx)}
+/* Change password in-flow modal */
+.pw-modal{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);
+  padding:14px;margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.pw-modal label{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--mu)}
+.pw-modal input{padding:7px 9px;border:1px solid var(--bd);border-radius:var(--r);
+  background:var(--sf);color:var(--tx);font-size:13px;width:100%}
+.pw-modal input:focus{outline:none;border-color:var(--bl)}
+.pw-save{width:100%;padding:7px;border:none;border-radius:var(--r);
+  background:var(--bl);color:#fff;font-size:12px;font-weight:600;cursor:pointer}
+.pw-save:hover{opacity:.88}
+.pw-msg{font-size:11px;text-align:center;margin-top:2px;display:none}
+.ki-in{padding:7px 9px;border:1px solid var(--bd);border-radius:var(--r);
+  background:var(--sf);color:var(--tx);width:100%}
+.ki-in:focus{outline:none;border-color:var(--bl)}
+.ki-ta{padding:7px 9px;border:1px solid var(--bd);border-radius:var(--r);
+  background:var(--sf);color:var(--tx);resize:none;min-height:50px;
+  width:100%;font-family:inherit;font-size:12px;line-height:1.4}
+.ki-ta:focus{outline:none;border-color:var(--bl)}
+.sv-btn{width:100%;padding:9px;border:none;border-radius:var(--r);
+  background:var(--bl);color:#fff;font-size:13px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;gap:6px}
+.sv-btn:hover{opacity:.88}
+.sv-ok{font-size:11px;text-align:center;color:var(--gn);margin-top:5px;display:none;font-weight:600}
+.sv-er{font-size:11px;text-align:center;color:var(--rd);margin-top:5px;display:none}
+.spin{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;display:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── RIGHT PANEL ── */
+/* FIX #6: back button */
+.rp-hdr{display:flex;align-items:flex-start;justify-content:space-between;
+  position:sticky;top:0;z-index:10;background:var(--bg);
+  margin:0 -20px 16px;padding:16px 20px 14px;
+  border-bottom:1px solid var(--bd2);
+  box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.rp-hdr-left{}
+.rp-title{font-size:17px;font-weight:700;margin-bottom:3px}
+.rp-sub{font-size:12px;color:var(--mu)}
+#btn-bod-back{padding:6px 14px;border-radius:var(--r);border:1px solid var(--bd2);
+  background:var(--sf);color:var(--mu);font-size:12px;white-space:nowrap;margin-top:2px}
+#btn-bod-back:hover{background:var(--sf2);color:var(--tx)}
+.charts-col{display:flex;flex-direction:column;gap:14px}
+.cc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);padding:16px 18px}
+.cc-t{font-size:13px;font-weight:700;margin-bottom:2px}
+.cc-s{font-size:11px;color:var(--mu);margin-bottom:12px}
+.cc-w{position:relative;height:185px}
+.cc-w.tall{height:220px}
+.legend{display:flex;gap:16px;margin-bottom:8px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mu)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* ── STATUS TABLE ── */
+.stbl-w{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);
+  overflow:hidden;margin-bottom:14px}
+.stbl-h{padding:12px 16px;font-size:13px;font-weight:700;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between}
+table{width:100%;border-collapse:collapse}
+thead th{padding:8px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--mu);
+  text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd)}
+tbody td{padding:9px 14px;font-size:12px;border-bottom:1px solid var(--bd)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--sf2)}
+
+/* LOCK/REVISION */
+.rev-badge{display:inline-flex;align-items:center;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;background:var(--bl-bg);color:var(--bl);margin-left:4px}
+.lock-bar{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--gn-bg);border:1px solid var(--gn);border-radius:var(--r);margin-bottom:10px;font-size:12px;color:var(--gn);font-weight:600}
+.edit-btn{padding:4px 10px;border-radius:var(--r);border:1px solid var(--gn);background:var(--sf);color:var(--gn);font-size:11px;font-weight:600;cursor:pointer}
+.edit-btn:hover{background:var(--gn);color:#fff}
+/* MESSAGING */
+/* msg-panel starts below topbar + rp-hdr sticky bar (~62px for title+padding) */
+.msg-panel{position:fixed;right:0;top:calc(var(--th) + 62px);bottom:0;width:320px;background:var(--sf);border-left:1px solid var(--bd);border-top:1px solid var(--bd);display:flex;flex-direction:column;z-index:89;transform:translateX(100%);transition:transform .25s ease}
+.msg-panel.open{transform:translateX(0)}
+.msg-hdr{padding:12px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.msg-hdr-title{font-weight:600;font-size:13px}
+.msg-close-btn{border:none;background:none;font-size:16px;color:var(--mu);cursor:pointer;padding:2px 6px}
+.msg-close-btn:hover{color:var(--tx)}
+.msg-thread{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.msg-bubble{max-width:85%;padding:8px 11px;border-radius:10px;font-size:12px;line-height:1.5;word-break:break-word}
+.msg-from-me{align-self:flex-end;background:var(--bl);color:#fff;border-radius:10px 10px 2px 10px}
+.msg-from-other{align-self:flex-start;background:var(--sf2);color:var(--tx);border-radius:10px 10px 10px 2px;border:1px solid var(--bd)}
+.msg-meta{font-size:10px;opacity:.65;margin-top:3px}
+.msg-compose{padding:10px 14px;border-top:1px solid var(--bd);display:flex;gap:7px}
+.msg-txt-input{flex:1;padding:7px 10px;border:1px solid var(--bd);border-radius:var(--r);font-size:12px;resize:none;font-family:inherit;background:var(--sf)}
+.msg-txt-input:focus{outline:none;border-color:var(--bl)}
+.msg-send-btn2{padding:7px 12px;border:none;border-radius:var(--r);background:var(--bl);color:#fff;font-size:12px;font-weight:600;cursor:pointer;align-self:flex-end}
+.msg-send-btn2:hover{opacity:.88}
+.msg-action-btn{padding:5px 11px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--sf);color:var(--mu);font-size:11px;cursor:pointer;margin-left:5px}
+.msg-action-btn:hover{background:var(--sf2);color:var(--tx)}
+.unread-dot{width:7px;height:7px;border-radius:50%;background:var(--rd);display:inline-block;margin-left:4px;vertical-align:middle}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center}
+.modal-box{background:var(--sf);border-radius:var(--rl);width:560px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-head{padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:14px}
+.modal-body{flex:1;overflow-y:auto;padding:14px 18px}
+.modal-close-x{border:none;background:none;font-size:18px;color:var(--mu);cursor:pointer}
+.modal-close-x:hover{color:var(--tx)}
+.hist-item{padding:9px 0;border-bottom:1px solid var(--bd)}
+.hist-item:last-child{border-bottom:none}
+.hist-meta{font-size:10px;color:var(--hi);margin-bottom:2px}
+.hist-text{font-size:12px;line-height:1.5}
+
+.cc-split{display:grid;grid-template-columns:1fr 120px;gap:12px;align-items:start}
+.cc-monthly{flex:1}
+.cc-total{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);padding:10px}
+.cc-total-title{font-size:11px;font-weight:700;color:var(--tx);margin-bottom:1px}
+.cc-total-sub{font-size:10px;color:var(--mu);margin-bottom:6px}
+.cc-total-w{position:relative;height:160px}
+
+/* CHART GRID 2-column */
+.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.charts-grid .cc{cursor:pointer;transition:box-shadow .15s,border-color .15s}
+.charts-grid .cc:hover{box-shadow:0 4px 18px rgba(0,0,0,.13);border-color:var(--bl-lt)}
+/* TwoBar split cards span both columns */
+.cc-span2{grid-column:1/-1}
+.cc-clickhint{font-size:9px;color:var(--hi);margin-top:3px;font-style:italic}
+
+/* DRILL-DOWN MODAL */
+.drill-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;
+  display:flex;align-items:center;justify-content:center;padding:16px}
+.drill-box{background:var(--sf);border-radius:var(--rl);width:min(900px,98vw);
+  max-height:92vh;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 24px 64px rgba(0,0,0,.28)}
+.drill-hd{padding:13px 18px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.drill-hd-t{font-weight:700;font-size:15px}
+.drill-hd-r{display:flex;gap:8px;align-items:center}
+.drill-exp{padding:5px 13px;border-radius:var(--r);border:1px solid var(--bd2);
+  background:var(--sf);color:var(--mu);font-size:11px;cursor:pointer}
+.drill-exp:hover{background:var(--bl);color:#fff;border-color:var(--bl)}
+.drill-cls{border:none;background:none;font-size:22px;color:var(--mu);cursor:pointer;
+  padding:0 4px;line-height:1}
+.drill-cls:hover{color:var(--tx)}
+.drill-bd{flex:1;overflow-y:auto;padding:20px 22px}
+.drill-cw{position:relative;height:380px}
+
+/* PURPOSE line under dept name in left panel */
+.dept-purpose{font-size:13px;color:var(--tx);margin-bottom:10px;
+  font-style:italic;line-height:1.4;padding:5px 8px;background:var(--sf2);
+  border-radius:var(--r);border-left:3px solid var(--bl)}
+
+/* ── Message button unread badge ── */
+.msg-unread-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:16px;height:16px;padding:0 4px;
+  background:var(--rd);color:#fff;border-radius:8px;
+  font-size:10px;font-weight:700;margin-left:5px;
+  animation:pulse-red 2s ease-in-out infinite;
+}
+@keyframes pulse-red{
+  0%,100%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.15);opacity:.85;}
+}
+/* topbar msg indicator */
+#topbar-msg-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--rd);
+  display:none;margin-right:2px;
+  animation:pulse-red 2s ease-in-out infinite;
+}
+
+/* ── Sticky period/chart-range sections ── */
+.lp-sticky{position:sticky;top:0;z-index:10;background:var(--sf);
+  padding:12px 13px 8px 13px;border-bottom:1px solid var(--bd)}
+/* BOD period selector */
+.bod-period-box{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);
+  padding:9px 11px;margin-bottom:8px}
+.bod-period-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.bod-period-label{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.7px;color:var(--hi);margin-bottom:4px}
+/* Drill modal legend */
+.drill-legend-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.drill-leg-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mu)}
+.drill-leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.drill-leg-line{width:14px;height:3px;border-radius:2px;flex-shrink:0}
+
+/* ── Notification dropdown (topbar unread dot) ── */
+.notif-wrap{position:relative;display:inline-flex;align-items:center}
+.notif-btn{border:none;background:none;cursor:pointer;padding:2px 4px;
+  display:inline-flex;align-items:center;gap:3px}
+.notif-count{font-size:10px;font-weight:700;color:var(--rd);
+  background:var(--rd-bg);padding:0 5px;border-radius:8px;
+  animation:pulse-red 2s ease-in-out infinite;min-width:18px;text-align:center}
+.notif-panel{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:var(--sf);border:1px solid var(--bd);border-radius:var(--rl);
+  box-shadow:0 8px 24px rgba(0,0,0,.15);min-width:240px;z-index:200;
+  display:none;flex-direction:column;overflow:hidden}
+.notif-panel.open{display:flex}
+.notif-head{padding:9px 14px;font-size:11px;font-weight:700;color:var(--mu);
+  text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--bd)}
+.notif-item{display:flex;align-items:center;gap:9px;padding:8px 14px;
+  cursor:pointer;transition:background .12s;border-bottom:1px solid var(--bd)}
+.notif-item:last-child{border-bottom:none}
+.notif-item:hover{background:var(--bl-bg)}
+.notif-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.notif-info{flex:1;min-width:0}
+.notif-dept{font-size:12px;font-weight:600;color:var(--tx)}
+.notif-cnt{font-size:10px;color:var(--rd);font-weight:600}
+.notif-empty{padding:14px;font-size:12px;color:var(--hi);text-align:center}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="pg-login">
+  <div class="lcard">
+    <div class="lbrand">CMI Operations</div>
+    <div class="lsub">KPI Reporting System</div>
+    <div class="lf"><label>Username</label>
+      <input id="l-u" type="text" autocomplete="off" placeholder="e.g. production"></div>
+    <div class="lf"><label>Password</label>
+      <input id="l-p" type="password" placeholder="••••••••"></div>
+    <div id="l-err"></div>
+    <button id="btn-login">Sign in</button>
+    <div class="lhint">
+      <b>Accounts:</b> bod · production · qa · design · project_dev · sc · cid · tl_handover · sales · marketing · cs · finance · hr · hse · it · ps<br>
+      Password: <b>[username]123</b> &nbsp;·&nbsp; e.g. bod123, hr123, it123, ps123
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="pg-app">
+  <div class="topbar">
+    <div class="tlogo">CMI <span>· KPI Dashboard</span></div>
+    <div class="tright">
+      <!-- FIX #2: sync badge is muted, no background colour -->
+      <div class="notif-wrap" id="notif-wrap"><button class="notif-btn" id="notif-btn" title="Unread messages" style="display:none"><span style="width:8px;height:8px;border-radius:50%;background:var(--rd);display:inline-block;animation:pulse-red 2s ease-in-out infinite"></span><span class="notif-count" id="notif-count">0</span></button><div class="notif-panel" id="notif-panel"><div class="notif-head">Unread messages</div><div id="notif-list"></div></div></div><button id="sync-badge">● Loading…</button>
+      <!-- t-badge and t-name removed in V14 -->
+      <!-- avatar circle removed per V14 -->
+      <button id="btn-logout">Sign out</button>
+    </div>
+  </div>
+  <div class="shell">
+    <div class="lp"><div class="lp-sc" id="lp-body"></div></div>
+    <div class="rp" id="rp-panel">
+      <!-- FIX #6: header row with optional back button -->
+      <div class="rp-hdr">
+        <div class="rp-hdr-left">
+          <div id="rp-title" class="rp-title">CMI Dashboard</div>
+          <div id="rp-sub" class="rp-sub">Select a department from the left panel</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px"><div id="rp-msg-btn-wrap"></div><button class="msg-action-btn hidden" id="rp-hist-btn">&#x1F4CB; History</button><button id="btn-bod-back" class="hidden">← Overview</button></div>
+      </div>
+      <div id="rp-body"></div>
+    </div>
+  
+  <div class="msg-panel" id="msg-panel">
+    <div class="msg-hdr">
+      <div class="msg-hdr-title" id="msg-panel-title">Messages</div>
+      <button class="msg-close-btn" id="msg-panel-close-btn">&#x2715;</button>
+    </div>
+    <div class="msg-thread" id="msg-thread"></div>
+    <div class="msg-compose">
+      <textarea class="msg-txt-input" id="msg-txt-input" rows="2" placeholder="Type a message…"></textarea>
+      <button class="msg-send-btn2" id="msg-send-btn">Send</button>
+    </div>
+  </div>
+  <!-- DRILL-DOWN MODAL -->
+  <div id="drill-ov" class="drill-ov" style="display:none">
+    <div class="drill-box">
+      <div class="drill-hd">
+        <div class="drill-hd-t" id="drill-title">Chart Detail</div>
+        <div class="drill-hd-r">
+          <button class="drill-exp" id="drill-exp-btn">⬇ Export PNG</button>
+          <button class="drill-cls" id="drill-cls-btn">✕</button>
+        </div>
+      </div>
+      <div class="drill-bd">
+        <div id="drill-body"><!-- set dynamically --></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-overlay" style="display:none" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span id="modal-title">Message History</span>
+        <button class="modal-close-x" id="modal-close-x">&#x2715;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// GOOGLE SHEETS CONFIG
+// ═══════════════════════════════════════════════
+var SHEET_ID  = '126wR-AZZ3DeB6ozFSDimKr_WXnmGdMZ8SsdcItOdJ4c';
+var SHEET_GID = '0'; // tab: KPI
+var SHEET_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID
+              + '/export?format=csv&gid=' + SHEET_GID;
+var SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbxOwHajJlmEEuzkOahmwjW6TbRjf_ehEyu0LOCjqJTAfKiViaL-0VCcu6Yvo7ESaz7U/exec';
+var GAS_PW_URL  = 'https://script.google.com/macros/s/AKfycbxOwHajJlmEEuzkOahmwjW6TbRjf_ehEyu0LOCjqJTAfKiViaL-0VCcu6Yvo7ESaz7U/exec';
+var GAS_MSG_URL = 'https://script.google.com/macros/s/AKfycbxOwHajJlmEEuzkOahmwjW6TbRjf_ehEyu0LOCjqJTAfKiViaL-0VCcu6Yvo7ESaz7U/exec';
+
+// ═══════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════
+var MN  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var NY  = new Date().getFullYear();
+var NM  = new Date().getMonth(); // 0-indexed: Jan=0 … Dec=11
+var YRS = [2024, 2025, 2026, 2027];
+
+// ═══════════════════════════════════════════════
+// DEPT DEFINITIONS  — V13
+// ═══════════════════════════════════════════════
+var DEPTS = [
+  {id:'PROD', name:'Production', abbr:'PROD', color:'#378ADD', ini:'RK', mgr:'Rudy Knoesen',
+   purpose:'Deliver boats on time with controlled labour.',
+   kpis:[
+     {k:'Schedule_Adherence_pct',   l:'Schedule Adherence',    u:'%',   t:'p'},
+     {k:'Labour_Hours_vs_Plan_pct', l:'Labour Hours vs Plan',  u:'%',   t:'p'},
+     {k:'Rework_Hours_pct',         l:'Rework Hours',          u:'%',   t:'p'},
+     {k:'Work_Order_Changes',       l:'Work Order Changes',    u:'No.', t:'i'},
+     {k:'Boats_Completed',          l:'Boats Completed',       u:'No.', t:'i'},
+   ],
+   overlayCharts:[
+     {title:'Schedule Adherence %',           unit:'%',    datasets:[{key:'Schedule_Adherence_pct',   label:'Schedule Adherence %', color:'#378ADD',type:'line'}]},
+     {title:'Labour Hours vs Plan %',          unit:'%',    datasets:[{key:'Labour_Hours_vs_Plan_pct', label:'Labour vs Plan %',     color:'#60A5FA',type:'line'}]},
+     {title:'Rework Hours %',                  unit:'%',    datasets:[{key:'Rework_Hours_pct',         label:'Rework %',             color:'#F87171',type:'line'}]},
+     {title:'Work Order Changes',              unit:'No.',  datasets:[{key:'Work_Order_Changes',       label:'WO Changes',           color:'#FB923C',type:'bar'}]},
+     {title:'Boats Completed',                 unit:'No.',  datasets:[{key:'Boats_Completed',          label:'Boats',                color:'#1D4ED8',type:'bar'}]},
+   ]},
+
+  {id:'QA', name:'Quality Assurance', abbr:'QA', color:'#D4537E', ini:'DA', mgr:'Mr Duy Anh',
+   purpose:'Ensure first-time quality.',
+   kpis:[
+     {k:'First_Time_Pass_pct',  l:'First Time Pass',    u:'%',   t:'p'},
+     {k:'QA_Defects_Logged',    l:'QA Defects Logged',  u:'No.', t:'i'},
+     {k:'Defects_Severity_A',   l:'Defects Severity A', u:'No.', t:'i'},
+     {k:'Defects_Severity_B',   l:'Defects Severity B', u:'No.', t:'i'},
+     {k:'Defects_Severity_C',   l:'Defects Severity C', u:'No.', t:'i'},
+     {k:'Avg_Closeout_Days_QA', l:'Avg Close-out Time', u:'Days',t:'p'},
+   ],
+   overlayCharts:[
+     {title:'First Time Pass %',         unit:'%',   datasets:[{key:'First_Time_Pass_pct', label:'FTP %',          color:'#D4537E',type:'line'}]},
+     {title:'QA Defects Logged',         unit:'No.', datasets:[{key:'QA_Defects_Logged',   label:'Defects Logged', color:'#F43F5E',type:'bar'}]},
+     {title:'Defects by Severity A/B/C', unit:'No.', datasets:[
+       {key:'Defects_Severity_A', label:'Severity A', color:'#DC2626', type:'bar'},
+       {key:'Defects_Severity_B', label:'Severity B', color:'#F97316', type:'bar'},
+       {key:'Defects_Severity_C', label:'Severity C', color:'#FBBF24', type:'bar'},
+     ]},
+     {title:'Avg Close-out Time',        unit:'Days',datasets:[{key:'Avg_Closeout_Days_QA', label:'Avg Days', color:'#BE185D',type:'line'}]},
+   ]},
+
+  {id:'DESIGN', name:'Design & Technical', abbr:'D&T', color:'#8B5CF6', ini:'JA', mgr:'James',
+   purpose:'Stable design and BOM.',
+   kpis:[
+     {k:'BOM_Errors_Identified',  l:'BOM Errors Identified', u:'No.', t:'i'},
+     {k:'Production_RFIs',        l:'Production RFIs',       u:'No.', t:'i'},
+     {k:'Late_Design_Changes',    l:'Late Design Changes',   u:'No.', t:'i'},
+   ],
+   overlayCharts:[
+     {title:'BOM Errors Identified',              unit:'No.', datasets:[{key:'BOM_Errors_Identified', label:'BOM Errors',    color:'#8B5CF6',type:'bar'}]},
+     {title:'Production RFIs',                    unit:'No.', datasets:[{key:'Production_RFIs',       label:'RFIs',          color:'#A78BFA',type:'bar'}]},
+     {title:'Late Design Changes',                unit:'No.', datasets:[{key:'Late_Design_Changes',   label:'Late Changes',  color:'#6D28D9',type:'bar'}]},
+   ]},
+
+  {id:'PD', name:'Project Development', abbr:'PD', color:'#14B8A6', ini:'PL', mgr:'Project Lead',
+   purpose:'Controlled implementation of change.',
+   kpis:[
+     {k:'Active_Projects',         l:'Active Projects',        u:'No.', t:'i'},
+     {k:'Projects_OnTrack_pct',    l:'Projects On-Track',      u:'%',   t:'p'},
+     {k:'Design_Changes_Released', l:'Design Changes Released',u:'No.', t:'i'},
+   ],
+   overlayCharts:[
+     {title:'Active Projects',         unit:'No.', datasets:[{key:'Active_Projects',         label:'Active Projects',  color:'#14B8A6',type:'bar'}]},
+     {title:'Projects On-Track %',     unit:'%',   datasets:[{key:'Projects_OnTrack_pct',    label:'On-Track %',       color:'#0D9488',type:'line'}]},
+     {title:'Design Changes Released', unit:'No.', datasets:[{key:'Design_Changes_Released', label:'Changes Released', color:'#5EEAD4',type:'bar'}]},
+   ]},
+
+  {id:'SC', name:'Supply Chain', abbr:'SCM', color:'#D85A30', ini:'ML', mgr:'Mr Loc',
+   purpose:'Material availability to production.',
+   kpis:[
+     {k:'OTIF_to_Production_pct',     l:'OTIF to Production',               u:'%',  t:'p'},
+     {k:'Material_Shortages',         l:'Material Shortages Impact Prod.',   u:'No.',t:'i'},
+     {k:'Expedited_Freight_Cost_USD', l:'Expedited Freight Cost',            u:'USD',t:'c'},
+   ],
+   overlayCharts:[
+     {title:'OTIF to Production %',                   unit:'%',   datasets:[{key:'OTIF_to_Production_pct',     label:'OTIF %',        color:'#D85A30',type:'line'}]},
+     {title:'Material Shortages Impacting Production', unit:'No.', datasets:[{key:'Material_Shortages',         label:'Shortages',     color:'#F97316',type:'bar'}]},
+     {title:'Expedited Freight Cost',                  unit:'USD', datasets:[{key:'Expedited_Freight_Cost_USD', label:'Freight Cost',  color:'#EA580C',type:'bar'}]},
+   ]},
+
+  {id:'CID', name:'CID', abbr:'CID', color:'#6366F1', ini:'CL', mgr:'CID Lead',
+   purpose:'Drive measurable improvement.',
+   kpis:[
+     {k:'CID_Actions_Open',      l:'CID Actions Open',    u:'No.',  t:'i'},
+     {k:'CID_Actions_Closed',    l:'CID Actions Closed',  u:'No.',  t:'i'},
+     {k:'CID_Avg_Closeout_Days', l:'Avg Close-out Time',  u:'Days', t:'p'},
+   ],
+   overlayCharts:[
+     {title:'CID Actions Open vs Closed', unit:'No.', datasets:[
+       {key:'CID_Actions_Open',   label:'Open',   color:'#A5B4FC', type:'bar'},
+       {key:'CID_Actions_Closed', label:'Closed', color:'#6366F1', type:'bar'},
+     ]},
+     {title:'Avg Close-out Time', unit:'Days', datasets:[{key:'CID_Avg_Closeout_Days', label:'Avg Days', color:'#4F46E5',type:'line'}]},
+   ]},
+
+  {id:'TL', name:'Thailand Handover', abbr:'TH', color:'#F97316', ini:'PH', mgr:'Phil Harper',
+   purpose:'Clean delivery and handover.',
+   kpis:[
+     {k:'Handovers_Completed',        l:'Handovers Completed',          u:'No.',t:'i'},
+     {k:'Delivery_to_Planned_pct',    l:'Delivery to Planned Date',     u:'%',  t:'p'},
+     {k:'Defects_at_Handover',        l:'Defects at Handover',          u:'No.',t:'i'},
+     {k:'Outstanding_Issues_Delivery',l:'Outstanding Issues at Delivery',u:'No.',t:'i'},
+   ],
+   overlayCharts:[
+     {title:'Handovers Completed',                    unit:'No.', datasets:[{key:'Handovers_Completed',         label:'Handovers',          color:'#F97316',type:'bar'}]},
+     {title:'Delivery to Planned Date %',              unit:'%',   datasets:[{key:'Delivery_to_Planned_pct',     label:'On-Time %',          color:'#FB923C',type:'line'}]},
+     {title:'Defects at Handover & Outstanding Issues',unit:'No.', datasets:[
+       {key:'Defects_at_Handover',        label:'Defects',            color:'#EF4444', type:'bar'},
+       {key:'Outstanding_Issues_Delivery',label:'Outstanding Issues', color:'#F59E0B', type:'bar'},
+     ]},
+   ]},
+
+  {id:'SALES', name:'Sales', abbr:'SALES', color:'#1D9E75', ini:'MK', mgr:'Mike',
+   purpose:'Order intake and pipeline visibility.',
+   kpis:[
+     {k:'Orders_Booked_USD',       l:'Orders Booked',            u:'USD', t:'c'},
+     {k:'Units_Sold',              l:'Units Sold',               u:'No.', t:'i'},
+     {k:'Order_Changes_Post',      l:'Order Changes Post-Contract',u:'No.',t:'i'},
+     {k:'Sales_Pipeline_USD',      l:'Sales Pipeline',           u:'USD', t:'c'},
+   ],
+   overlayCharts:[
+     {title:'Orders Booked vs Pipeline', unit:'USD', datasets:[
+       {key:'Sales_Pipeline_USD',  label:'Pipeline',      color:'#6EE7B7', type:'bar'},
+       {key:'Orders_Booked_USD',   label:'Orders Booked', color:'#1D9E75', type:'bar'},
+     ]},
+     {title:'Units Sold',                unit:'No.', datasets:[{key:'Units_Sold',         label:'Units',          color:'#34D399',type:'bar'}]},
+     {title:'Order Changes Post-Contract',unit:'No.', datasets:[{key:'Order_Changes_Post', label:'Order Changes',  color:'#F59E0B',type:'bar'}]},
+   ]},
+
+  {id:'MKTG', name:'Marketing', abbr:'MKTG', color:'#EC4899', ini:'NP', mgr:'Nhi Pham',
+   purpose:'Lead generation effectiveness.',
+   kpis:[
+     {k:'Qualified_Leads',        l:'Qualified Leads',    u:'No.', t:'i'},
+     {k:'Cost_Per_Lead_USD',      l:'Cost per Lead',      u:'USD', t:'c'},
+     {k:'Conversion_Rate_pct',    l:'Conversion Rate',    u:'%',   t:'p'},
+     {k:'Campaigns_Active',       l:'Campaigns Active',   u:'No.', t:'i'},
+   ],
+   overlayCharts:[
+     {title:'Qualified Leads',   unit:'No.', datasets:[{key:'Qualified_Leads',     label:'Leads',       color:'#EC4899',type:'bar'}]},
+     {title:'Cost per Lead',     unit:'USD', datasets:[{key:'Cost_Per_Lead_USD',   label:'Cost/Lead',   color:'#F472B6',type:'line'}]},
+     {title:'Conversion Rate %', unit:'%',   datasets:[{key:'Conversion_Rate_pct', label:'Conversion %',color:'#BE185D',type:'line'}]},
+   ]},
+
+  {id:'CS', name:'Customer Service', abbr:'CS', color:'#0891B2', ini:'VN', mgr:'Van Nguyen',
+   purpose:'Warranty control and resolution.',
+   kpis:[
+     {k:'Warranty_Claims_Open',  l:'Warranty Claims Open',  u:'No.', t:'i'},
+     {k:'New_Claims',            l:'New Claims',            u:'No.', t:'i'},
+     {k:'Avg_Closeout_Days_CS',  l:'Avg Close-out Time',   u:'Days',t:'p'},
+     {k:'Repeat_Issues',         l:'Repeat Issues',         u:'No.', t:'i'},
+   ],
+   overlayCharts:[
+     {title:'Claims Open vs New', unit:'No.', datasets:[
+       {key:'Warranty_Claims_Open', label:'Open',      color:'#F87171', type:'bar'},
+       {key:'New_Claims',           label:'New Claims',color:'#0891B2', type:'bar'},
+     ]},
+     {title:'Avg Close-out Time', unit:'Days', datasets:[{key:'Avg_Closeout_Days_CS', label:'Avg Days',     color:'#0E7490',type:'line'}]},
+     {title:'Repeat Issues',      unit:'No.',  datasets:[{key:'Repeat_Issues',         label:'Repeat Issues',color:'#EF4444',type:'bar'}]},
+   ]},
+
+  {id:'FIN', name:'Finance', abbr:'FIN', color:'#EF9F27', ini:'MD', mgr:'Mr Dung',
+   purpose:'Cash and margin control.',
+   kpis:[
+     {k:'Operating_CF_USD',       l:'Operating Cash Flow',    u:'USD', t:'c'},
+     {k:'Gross_Margin_pct',       l:'Gross Margin',           u:'%',   t:'p'},
+     {k:'Aged_Receivables_USD',   l:'Aged Receivables >60d',  u:'USD', t:'c'},
+     {k:'Inventory_Value_USD',    l:'Inventory Value',        u:'USD', t:'c'},
+   ],
+   overlayCharts:[
+     {title:'Operating Cash Flow', unit:'USD', datasets:[{key:'Operating_CF_USD',     label:'Cash Flow',     color:'#EF9F27',type:'bar'}]},
+     {title:'Gross Margin %',      unit:'%',   datasets:[{key:'Gross_Margin_pct',     label:'Gross Margin %',color:'#F59E0B',type:'line'}]},
+     {title:'Aged Receivables >60d & Inventory', unit:'USD', datasets:[
+       {key:'Aged_Receivables_USD', label:'AR >60d',    color:'#EF4444', type:'bar'},
+       {key:'Inventory_Value_USD',  label:'Inventory',  color:'#FCD34D', type:'bar'},
+     ]},
+   ]},
+
+  {id:'HR', name:'Human Resources', abbr:'HR', color:'#7F77DD', ini:'MC', mgr:'Ms Chau',
+   purpose:'Workforce stability.',
+   kpis:[
+     {k:'Headcount_vs_Plan',  l:'Headcount vs Plan',  u:'No.', t:'i'},
+     {k:'Staff_Turnover_pct', l:'Staff Turnover',     u:'%',   t:'p'},
+     {k:'Absenteeism_pct',    l:'Absenteeism',        u:'%',   t:'p'},
+     {k:'Overtime_pct',       l:'Overtime',           u:'%',   t:'p'},
+   ],
+   overlayCharts:[
+     {title:'Headcount vs Plan', unit:'No.', datasets:[{key:'Headcount_vs_Plan',  label:'Headcount', color:'#7F77DD',type:'bar'}]},
+     {title:'Staff Turnover & Absenteeism %', unit:'%', datasets:[
+       {key:'Staff_Turnover_pct', label:'Turnover %',    color:'#F87171', type:'line'},
+       {key:'Absenteeism_pct',    label:'Absenteeism %', color:'#FB923C', type:'line'},
+     ]},
+     {title:'Overtime %', unit:'%', datasets:[{key:'Overtime_pct', label:'Overtime %', color:'#A78BFA',type:'line'}]},
+   ]},
+
+  {id:'HSE', name:'HSE', abbr:'HSE', color:'#16A34A', ini:'MP', mgr:'Mr Phong',
+   purpose:'Safe operations and compliance.',
+   kpis:[
+     {k:'TRIR',                   l:'TRIR',                    u:'rate',t:'p'},
+     {k:'LTIFR',                  l:'LTIFR',                   u:'rate',t:'p'},
+     {k:'Near_Miss_Reports',      l:'Near Miss Reports',       u:'No.', t:'i'},
+     {k:'High_Risk_Work_Comp_pct',l:'High-Risk Work Compliance',u:'%',  t:'p'},
+   ],
+   overlayCharts:[
+     {title:'TRIR & LTIFR',        unit:'rate', datasets:[
+       {key:'TRIR',  label:'TRIR',  color:'#DC2626', type:'line'},
+       {key:'LTIFR', label:'LTIFR', color:'#F97316', type:'line'},
+     ]},
+     {title:'Near Miss Reports',            unit:'No.', datasets:[{key:'Near_Miss_Reports',       label:'Near Miss',   color:'#16A34A',type:'bar'}]},
+     {title:'High-Risk Work Compliance %',  unit:'%',   datasets:[{key:'High_Risk_Work_Comp_pct', label:'Compliance %',color:'#4ADE80',type:'line'}]},
+   ]},
+
+  {id:'IT', name:'Information Technology', abbr:'IT', color:'#0EA5E9', ini:'IT', mgr:'IT Manager',
+   purpose:'Reliable systems and secure infrastructure.',
+   kpis:[
+     {k:'System_Uptime_pct',        l:'System Uptime',             u:'%',   t:'p'},
+     {k:'IT_Incidents_Open',        l:'IT Incidents Open',         u:'No.', t:'i'},
+     {k:'Avg_Resolution_Time_Days', l:'Avg Incident Resolution',   u:'Days',t:'p'},
+     {k:'Cybersecurity_Alerts',     l:'Cybersecurity Alerts',      u:'No.', t:'i'},
+     {k:'Projects_OnTime_IT_pct',   l:'IT Projects On-Time',       u:'%',   t:'p'},
+   ],
+   overlayCharts:[
+     {title:'System Uptime %',             unit:'%',    datasets:[{key:'System_Uptime_pct',        label:'Uptime %',          color:'#0EA5E9',type:'line'}]},
+     {title:'IT Incidents Open',           unit:'No.',  datasets:[{key:'IT_Incidents_Open',        label:'Incidents Open',    color:'#F87171',type:'bar'}]},
+     {title:'Avg Incident Resolution',     unit:'Days', datasets:[{key:'Avg_Resolution_Time_Days', label:'Avg Days',          color:'#38BDF8',type:'line'}]},
+     {title:'Cybersecurity Alerts',        unit:'No.',  datasets:[{key:'Cybersecurity_Alerts',     label:'Alerts',            color:'#DC2626',type:'bar'}]},
+     {title:'IT Projects On-Time %',       unit:'%',    datasets:[{key:'Projects_OnTime_IT_pct',   label:'On-Time %',         color:'#0369A1',type:'line'}]},
+   ]},
+
+  {id:'PS', name:'Property & Security', abbr:'P&S', color:'#78716C', ini:'PS', mgr:'P&S Manager',
+   purpose:'Safe premises and compliant facility operations.',
+   kpis:[
+     {k:'Security_Incidents',          l:'Security Incidents',          u:'No.', t:'i'},
+     {k:'Access_Control_Compliance_pct',l:'Access Control Compliance',  u:'%',   t:'p'},
+     {k:'Facility_Issues_Open',        l:'Facility Issues Open',        u:'No.', t:'i'},
+     {k:'Preventive_Maint_Comp_pct',   l:'Preventive Maintenance Comp.',u:'%',   t:'p'},
+     {k:'Visitor_Management_Score',    l:'Visitor Management Score',    u:'No.', t:'i'},
+   ],
+   overlayCharts:[
+     {title:'Security Incidents',              unit:'No.', datasets:[{key:'Security_Incidents',           label:'Incidents',          color:'#DC2626',type:'bar'}]},
+     {title:'Access Control Compliance %',     unit:'%',   datasets:[{key:'Access_Control_Compliance_pct',label:'Compliance %',       color:'#78716C',type:'line'}]},
+     {title:'Facility Issues Open',            unit:'No.', datasets:[{key:'Facility_Issues_Open',         label:'Issues Open',        color:'#F97316',type:'bar'}]},
+     {title:'Preventive Maintenance Comp. %',  unit:'%',   datasets:[{key:'Preventive_Maint_Comp_pct',    label:'Maintenance %',      color:'#A8A29E',type:'line'}]},
+     {title:'Visitor Management Score',        unit:'No.', datasets:[{key:'Visitor_Management_Score',     label:'Score',              color:'#57534E',type:'bar'}]},
+   ]},
+];
+
+var USERS = {
+  bod:         {role:'bod',  name:'BOD',                      ini:'',color:'#EF9F27',pass:'bod123'},
+  admin:       {role:'admin',name:'System Admin',              ini:'',color:'#374151',pass:'admin123'},
+  production:  {role:'dept', dept:'PROD',   name:'Rudy Knoesen',    ini:'RK',color:'#378ADD',pass:'production123'},
+  qa:          {role:'dept', dept:'QA',     name:'Mr Duy Anh',      ini:'DA',color:'#D4537E',pass:'qa123'},
+  design:      {role:'dept', dept:'DESIGN', name:'James',            ini:'JA',color:'#8B5CF6',pass:'design123'},
+  project_dev: {role:'dept', dept:'PD',     name:'Project Lead',     ini:'PL',color:'#14B8A6',pass:'project_dev123'},
+  sc:          {role:'dept', dept:'SC',     name:'Mr Loc',           ini:'ML',color:'#D85A30',pass:'sc123'},
+  cid:         {role:'dept', dept:'CID',    name:'CID Lead',         ini:'CL',color:'#6366F1',pass:'cid123'},
+  tl_handover: {role:'dept', dept:'TL',     name:'Phil Harper',      ini:'PH',color:'#F97316',pass:'tl_handover123'},
+  sales:       {role:'dept', dept:'SALES',  name:'Mike',             ini:'MK',color:'#1D9E75',pass:'sales123'},
+  marketing:   {role:'dept', dept:'MKTG',   name:'Nhi Pham',         ini:'NP',color:'#EC4899',pass:'marketing123'},
+  cs:          {role:'dept', dept:'CS',     name:'Van Nguyen',       ini:'VN',color:'#0891B2',pass:'cs123'},
+  finance:     {role:'dept', dept:'FIN',    name:'Mr Dung',          ini:'MD',color:'#EF9F27',pass:'finance123'},
+  hr:          {role:'dept', dept:'HR',     name:'Ms Chau',          ini:'MC',color:'#7F77DD',pass:'hr123'},
+  hse:         {role:'dept', dept:'HSE',    name:'Mr Phong',         ini:'MP',color:'#16A34A',pass:'hse123'},
+  it:          {role:'dept', dept:'IT',     name:'IT Manager',       ini:'IT',color:'#0EA5E9',pass:'it123'},
+  ps:          {role:'dept', dept:'PS',     name:'P&S Manager',      ini:'PS',color:'#78716C',pass:'ps123'},
+};
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+var GS_DATA = [], GS_HDR = [];
+var U = null, deptId = null, selY = NY, selM = NM;
+var drF = {y:NY-1, m:0}, drT = {y:NY, m:NM};
+var accOpen = null;
+var CH = {};
+var UNLOCKED = {};
+// BOD selected period (for snapshot delta view)
+var selBodY = NY;
+var selBodM = NM; // 0-indexed
+
+Chart.register(ChartDataLabels);
+function el(id){ return document.getElementById(id); }
+
+// ═══════════════════════════════════════════════
+// GOOGLE SHEETS — fetch CSV
+// ═══════════════════════════════════════════════
+function fetchSheetData(cb){
+  setSyncBadge('loading');
+  fetch(SHEET_URL + '&t=' + Date.now())
+    .then(function(r){ return r.text(); })
+    .then(function(csv){
+      var parsed = parseCSV(csv);
+      if(parsed.length < 2){ setSyncBadge('err', 0); if(cb)cb(); return; }
+      GS_HDR  = parsed[0].map(function(h){ return h.trim(); });
+      GS_DATA = parsed.slice(1).filter(function(r){ return r[0] && r[0].trim(); });
+      setSyncBadge('ok', GS_DATA.length);
+      if(cb)cb();
+    })
+    .catch(function(){
+      setSyncBadge('offline', 0);
+      if(cb)cb();
+    });
+}
+
+function parseCSV(text){
+  var rows=[], cur=[], field='', inQ=false;
+  for(var i=0;i<text.length;i++){
+    var ch=text[i];
+    if(inQ){
+      if(ch==='"'&&text[i+1]==='"'){field+='"';i++;}
+      else if(ch==='"'){inQ=false;}
+      else field+=ch;
+    } else {
+      if(ch==='"'){inQ=true;}
+      else if(ch===','){cur.push(field.trim());field='';}
+      else if(ch==='\n'||(ch==='\r'&&text[i+1]==='\n')){
+        if(ch==='\r')i++;
+        cur.push(field.trim());field='';rows.push(cur);cur=[];
+      } else field+=ch;
+    }
+  }
+  if(field||cur.length)cur.push(field.trim());
+  if(cur.length>1||cur[0])rows.push(cur);
+  return rows;
+}
+
+function setSyncBadge(state, count){
+  var b = el('sync-badge');
+  if(!b) return;
+  if(state==='loading') { b.textContent='● Syncing…'; b.style.color='var(--am)'; }
+  else if(state==='ok')  { b.textContent='● Live · '+count+' rows'; b.style.color='var(--hi)'; }
+  else if(state==='err') { b.textContent='● No data'; b.style.color='var(--rd)'; }
+  else                   { b.textContent='● Offline'; b.style.color='var(--hi)'; }
+}
+
+// ═══════════════════════════════════════════════
+// DATA ACCESS
+// FIX #4: Google Sheet stores month as 1-12 (Jan=1).
+//         JS code uses 0-indexed months (Jan=0).
+//         Fix: sheet_month - 1 === code_month
+// ═══════════════════════════════════════════════
+function getGSRow(dept, year, month_0idx){
+  // Returns LAST (latest revision) row for dept/year/month
+  var found=null;
+  for(var i=0;i<GS_DATA.length;i++){
+    var r=GS_DATA[i];
+    if(r[0]===dept&&(parseInt(r[1])-1)===month_0idx&&parseInt(r[2])===year)
+      found=r;
+  }
+  return found;
+}
+function getRevisionCount(dept,year,m0){
+  var n=0;
+  for(var i=0;i<GS_DATA.length;i++){
+    var r=GS_DATA[i];
+    if(r[0]===dept&&(parseInt(r[1])-1)===m0&&parseInt(r[2])===year)n++;
+  }
+  return n;
+}
+function ordinal(n){
+  var s=['th','st','nd','rd'],v=n%100;
+  return n+(s[(v-20)%10]||s[v]||s[0]);
+}
+
+function getGSVal(dept, year, month_0idx, key){
+  var ki = GS_HDR.indexOf(key);
+  if(ki<0) return null;
+  var r = getGSRow(dept, year, month_0idx);
+  if(!r) return null;
+  var v = r[ki];
+  if(v===''||v===undefined||v===null) return null;
+  var n = parseFloat(v);
+  // FIX #1: round to 4 decimal places to eliminate floating-point noise
+  return isNaN(n) ? v : Math.round(n * 10000) / 10000;
+}
+
+// FIX #5: find the latest month/year that has data for a dept
+function getLastDataMonth(deptId){
+  var latest = null;
+  for(var i=0;i<GS_DATA.length;i++){
+    var r=GS_DATA[i];
+    if(r[0]===deptId){
+      var y=parseInt(r[2]);
+      var m=parseInt(r[1]); // 1-indexed from sheet
+      if(!latest || y>latest.y || (y===latest.y && m>latest.m))
+        latest={y:y,m:m};
+    }
+  }
+  return latest; // {y, m} where m is 1-indexed (1=Jan)
+}
+
+// ═══════════════════════════════════════════════
+// LOGIN / LOGOUT
+// ═══════════════════════════════════════════════
+// doLogin is defined later in the CHANGE PASSWORD section
+// (it needs getPass() to check localStorage passwords)
+
+function doLogout(){
+  try{sessionStorage.removeItem('cmi_u');}catch(e){}
+  // Read-store is per-user key, no need to clear on logout
+  U=null; deptId=null; accOpen=null;
+  Object.keys(CH).forEach(function(k){ try{CH[k].destroy();}catch(e){} });
+  CH={}; GS_DATA=[]; GS_HDR=[];
+  el('pg-app').style.display='none';
+  el('pg-login').style.display='flex';
+  el('l-u').value=''; el('l-p').value='';
+}
+
+// ═══════════════════════════════════════════════
+// DEPT VIEW — LEFT PANEL
+// ═══════════════════════════════════════════════
+function buildDeptLeft(){
+  var dept=DEPTS.find(function(d){return d.id===deptId;});
+  var row=getGSRow(deptId,selY,selM);
+  var saved=!!row;
+  var comment=saved?getGSVal(deptId,selY,selM,'comment')||'':'';
+  // Previous month for delta indicators
+  var prevM0=selM===0?11:selM-1;
+  var prevY=selM===0?selY-1:selY;
+  var prevRow=getGSRow(deptId,prevY,prevM0);
+  var mO=MN.map(function(m,i){return '<option value="'+i+'"'+(i===selM?' selected':'')+'>'+m+'</option>';}).join('');
+  var yO=YRS.map(function(y){return '<option value="'+y+'"'+(y===selY?' selected':'')+'>'+y+'</option>';}).join('');
+  var revCount=getRevisionCount(deptId,selY,selM);
+  var isLocked=saved&&!UNLOCKED[deptId+'_'+selY+'_'+selM];
+  var inputs=dept.kpis.map(function(k){
+    var v=saved?getGSVal(deptId,selY,selM,k.k):null;
+    var pv=prevRow?getGSVal(deptId,prevY,prevM0,k.k):null;
+    var dlt='',dc='dn';
+    if(v!=null&&pv!=null&&pv!==0){
+      var p=((v-pv)/Math.abs(pv)*100);
+      dlt=(p>=0?'▲':'▼')+Math.abs(p).toFixed(1)+'%';
+      dc=p>=0?'du':'dd';
+    }
+    var revSpan=revCount>1?'<span class="rev-badge">'+ordinal(revCount)+'</span>':'';
+    var deltaSpan=dlt?'<span class="ki-delta '+dc+'">'+dlt+'<span class="ki-vs"> vs '+MN[prevM0]+'</span></span>':'';
+    return '<div class="ki">'
+      +'<div class="ki-lbl-row"><label>'+k.l+' <span style="color:var(--hi);font-weight:400">('+k.u+')</span></label>'
+      +'<span style="display:flex;align-items:center;gap:3px">'+revSpan+deltaSpan+'</span></div>'
+      +'<input class="ki-in" type="number" id="ki-'+k.k+'"'
+      +' step="'+(k.t==='p'?'0.01':'1')+'"'
+      +' value="'+(v!=null?v:'')+'" placeholder="—"'
+      +(isLocked?' readonly style="background:var(--sf2);color:var(--mu)"':'')+'></div>';
+  }).join('');
+  var drMO=function(sel){return MN.map(function(m,i){return '<option value="'+i+'"'+(i===sel?' selected':'')+'>'+m+'</option>';}).join('');};
+  var drYO=function(sel){return YRS.map(function(y){return '<option value="'+y+'"'+(y===sel?' selected':'')+'>'+y+'</option>';}).join('');};
+
+  el('lp-body').innerHTML=
+    '<div class="lp-sticky"><div class="lsec">Period</div>'
+    +'<div class="my-row">'
+    +'<select class="mysel" id="s-m">'+mO+'</select>'
+    +'<select class="mysel" id="s-y">'+yO+'</select></div>'
+    +'<div class="inp-st">'
+    +'<span style="font-size:11px;color:var(--mu);font-weight:500">Status</span>'
+    +'<span class="badge '+(saved?'bg':'ba')+'" id="st-badge">'+(saved?'Submitted':'Pending')+'</span></div>'
+    +'</div>' // close lp-sticky
+    +'<div style="padding:0 13px"><div class="lsec">'+dept.name+' ('+dept.abbr+') — '+MN[selM]+' '+selY+'</div>'
+    +'<div class="dept-purpose">'+dept.purpose+'</div>'
+    +'<div class="ki-list">'+inputs+'</div>'
+    +'<div class="ki" style="margin-bottom:13px">'
+    +'<label>Comment</label>'
+    +'<textarea class="ki-ta" id="ki-cmt" placeholder="Notes…">'+comment+'</textarea></div>'
+    +(isLocked
+        ?'<div class="lock-bar">🔒 Submitted — locked <button class="edit-btn" id="btn-unlock">✏️ Edit &amp; revise</button></div>'
+        :'<button class="sv-btn" id="sv-btn"><span class="spin" id="sv-sp"></span><span id="sv-lb">Save KPIs</span></button>'
+     )
+    +'<div class="sv-ok" id="sv-ok">✓ Saved to Google Sheets</div>'
+    +'<div class="sv-er" id="sv-er"></div>'
+    +'<div class="lsec" style="margin-top:14px">Chart range</div>'
+    +'<div class="dr-box"><div class="dr-quick">'
+    +'<button class="drq" data-quick="ytd">YTD</button>'
+    +'<button class="drq" data-quick="12m">Last 12M</button>'
+    +'<button class="drq" data-quick="all">All data</button></div>'
+    +'<div class="dr-row"><label>From</label>'
+    +'<select class="drsel" id="df-m">'+drMO(drF.m)+'</select>'
+    +'<select class="drsel" id="df-y">'+drYO(drF.y)+'</select></div>'
+    +'<div class="dr-row"><label>To</label>'
+    +'<select class="drsel" id="dt-m">'+drMO(drT.m)+'</select>'
+    +'<select class="drsel" id="dt-y">'+drYO(drT.y)+'</select></div>'
+    +'<button class="dr-apply" id="dr-apply-d">Apply</button></div>'
+    +'<div class="lsec" style="margin-top:14px">Account</div>'
+    +'<button class="chpw-btn" id="btn-chpw">🔑 Change password</button>'
+    +'<div id="chpw-wrap"></div></div>';
+}
+
+function onPC(){
+  selM=parseInt(el('s-m').value);
+  selY=parseInt(el('s-y').value);
+  buildDeptLeft(); renderDeptRight();
+}
+function setQ(preset){
+  document.querySelectorAll('.drq').forEach(function(b){b.classList.remove('act');});
+  var b=document.querySelector('.drq[data-quick="'+preset+'"]');if(b)b.classList.add('act');
+  if(preset==='ytd') {drF={y:NY,m:0};   drT={y:NY,m:NM};}
+  if(preset==='12m') {drF={y:NY-1,m:NM};drT={y:NY,m:NM};}
+  if(preset==='all') {drF={y:2025,m:0}; drT={y:NY,m:NM};}
+  buildDeptLeft(); renderDeptRight();
+}
+function applyDR(){
+  var fm=el('df-m'),fy=el('df-y'),tm=el('dt-m'),ty=el('dt-y');
+  var bfm=el('bdf-m'),bfy=el('bdf-y'),btm=el('bdt-m'),bty=el('bdt-y');
+  if(fm&&fy){drF={m:parseInt(fm.value),y:parseInt(fy.value)};}
+  if(tm&&ty){drT={m:parseInt(tm.value),y:parseInt(ty.value)};}
+  if(bfm&&bfy){drF={m:parseInt(bfm.value),y:parseInt(bfy.value)};}
+  if(btm&&bty){drT={m:parseInt(btm.value),y:parseInt(bty.value)};}
+  if(U&&U.role==='bod') renderbodRight(accOpen);
+  else renderDeptRight();
+}
+
+function saveDept(){
+  var dept=DEPTS.find(function(d){return d.id===deptId;});
+  var sp=el('sv-sp'),lb=el('sv-lb'),ok=el('sv-ok'),er=el('sv-er');
+  if(!sp)return;
+  sp.style.display='inline-block'; lb.textContent='Saving…';
+  ok.style.display='none'; er.style.display='none';
+  var payload={dept:deptId, month:selM+1, year:selY, // month+1 for sheet (1-indexed)
+    submitted_by:U.username, comment:el('ki-cmt').value||''};
+  dept.kpis.forEach(function(k){
+    var inp=el('ki-'+k.k);
+    if(inp&&inp.value!=='')payload[k.k]=parseFloat(inp.value);
+  });
+  if(!SCRIPT_URL){
+    // Demo: update local GS_DATA so chart updates immediately
+    var newRow=GS_HDR.map(function(h){
+      if(h==='dept')return deptId;
+      if(h==='month')return String(selM+1);
+      if(h==='year')return String(selY);
+      if(h==='submitted_at')return new Date().toLocaleString();
+      if(h==='submitted_by')return U.username;
+      return payload[h]!=null?String(payload[h]):'';
+    });
+    GS_DATA.push(newRow); // always append = new revision
+    delete UNLOCKED[deptId+'_'+selY+'_'+selM];
+    sp.style.display='none'; lb.textContent='Save KPIs';
+    ok.style.display='block';
+    var badge=el('st-badge');if(badge){badge.textContent='Submitted';badge.className='badge bg';}
+    buildDeptLeft();
+    renderDeptRight();
+    setTimeout(function(){ok.style.display='none';},3000);
+    return;
+  }
+  // Send to GAS via Image beacon — completely bypasses CORS
+  // GAS saves to sheet; we update UI locally without waiting for response
+  var params='action=saveKPI';
+  Object.keys(payload).forEach(function(k){
+    params+='&'+encodeURIComponent(k)+'='+encodeURIComponent(payload[k]!=null?payload[k]:'');
+  });
+
+  // Update UI locally immediately (optimistic update)
+  var newRow=GS_HDR.map(function(h){
+    if(h==='dept')return deptId;
+    if(h==='month')return String(selM+1);
+    if(h==='year')return String(selY);
+    if(h==='submitted_at')return new Date().toLocaleString();
+    if(h==='submitted_by')return U.username;
+    return payload[h]!=null?String(payload[h]):'';
+  });
+  GS_DATA.push(newRow);
+  delete UNLOCKED[deptId+'_'+selY+'_'+selM];
+  sp.style.display='none'; lb.textContent='Save KPIs';
+  ok.textContent='✓ Saved to Google Sheets';
+  ok.style.display='block';
+  var badge=el('st-badge');if(badge){badge.textContent='Submitted';badge.className='badge bg';}
+  buildDeptLeft(); renderDeptRight();
+  setTimeout(function(){ok.style.display='none';},3000);
+
+  // Fire-and-forget to GAS via img beacon (no CORS, no response needed)
+  var beacon=new Image();
+  beacon.src=SCRIPT_URL+'?'+params+'&t='+Date.now();
+}
+
+// ═══════════════════════════════════════════════
+// DEPT VIEW — RIGHT PANEL
+// ═══════════════════════════════════════════════
+function renderDeptRight(){
+  var dept=DEPTS.find(function(d){return d.id===deptId;});
+  el('rp-title').textContent=dept.name+' ('+dept.abbr+')';
+  el('rp-sub').textContent=''; // purpose and manager removed from chart header (V14)
+  el('btn-bod-back').classList.add('hidden');
+  var mw=el('rp-msg-btn-wrap');
+  if(mw){var ud=getDeptUnreadBadge(deptId);mw.innerHTML='<button class="msg-action-btn" id="rp-open-msg" data-dept="'+deptId+'">&#x1F4AC; Messages'+ud+'</button>';}
+  var range=buildRange(deptId);
+  killCharts('d_');
+  el('rp-body').innerHTML='<div class="charts-grid" id="d-col"></div>';
+  var col=el('d-col');
+  if(dept.overlayCharts){
+    // twoBar charts (full-width) come first, single charts fill 2-col grid after
+    var sortedOC = dept.overlayCharts.slice().sort(function(a,b){
+      var aTwo = a.datasets.length===2&&a.datasets[0].type==='bar'&&a.datasets[1].type==='bar';
+      var bTwo = b.datasets.length===2&&b.datasets[0].type==='bar'&&b.datasets[1].type==='bar';
+      return (bTwo?1:0)-(aTwo?1:0);
+    });
+    sortedOC.forEach(function(oc,i){
+      renderOverlayChart(col,'d_oc_'+i,oc,range,deptId,true);
+    });
+  } else {
+    dept.kpis.forEach(function(kpi,i){
+      var vals=range.dkeys.map(function(dk){return getGSVal(deptId,dk.y,dk.m,kpi.k);});
+      var cid='d_'+i;
+      var div=document.createElement('div');div.className='cc';
+      div.dataset.chartId=cid;div.dataset.chartTitle=kpi.l;
+      div.innerHTML='<div class="cc-t">'+kpi.l+'</div>'
+        +'<div class="cc-s">'+kpi.u+' · '+rangeLabel(range)+'</div>'
+        +'<div class="cc-clickhint">Click to expand</div>'
+        +'<div class="cc-w"><canvas id="'+cid+'"></canvas></div>';
+      col.appendChild(div);
+      CH[cid]=mkLine(cid,range.labels,kpi.l,vals,dept.color,kpi.u);
+    });
+  }
+}
+
+// shared overlay chart renderer
+function renderOverlayChart(col, cid, oc, range, did, gridMode){
+  var isMulti=oc.datasets.length>1;
+  var legendHtml=isMulti?'<div class="legend">'+oc.datasets.map(function(ds){
+    return '<div class="legend-item"><span class="legend-dot" style="background:'+ds.color+'"></span>'+ds.label+'</div>';
+  }).join('')+'</div>':'';
+  var isTwoBarCheck=oc.datasets.length===2&&oc.datasets[0].type==='bar'&&oc.datasets[1].type==='bar';
+  // Outer wrapper: for twoBar charts use split layout (monthly | total)
+  var wrapper=document.createElement('div');
+  // TwoBar split cards need full-width to keep monthly+total side-by-side
+  wrapper.className='cc'+(isTwoBarCheck?' cc-span2':'');
+  wrapper.dataset.chartId=cid;wrapper.dataset.chartTitle=oc.title;wrapper.dataset.chartSub=rangeLabel(range);
+  var clickHint=gridMode?'<div class="cc-clickhint">Click to expand</div>':'';
+  if(isTwoBarCheck){
+    wrapper.innerHTML='<div class="cc-t">'+oc.title+'</div>'
+      +'<div class="cc-s">'+rangeLabel(range)+'</div>'
+      +clickHint+legendHtml
+      +'<div class="cc-split">'
+      +'<div class="cc-monthly"><div class="cc-w tall"><canvas id="'+cid+'"></canvas></div></div>'
+      +'<div class="cc-total" id="'+cid+'-tot-card">'
+      +'<div class="cc-total-title">Total</div>'
+      +'<div class="cc-total-sub">'+rangeLabel(range)+'</div>'
+      +'<div class="cc-total-w"><canvas id="'+cid+'-tot"></canvas></div>'
+      +'</div></div>';
+  } else {
+    wrapper.innerHTML='<div class="cc-t">'+oc.title+'</div>'
+      +'<div class="cc-s">'+rangeLabel(range)+'</div>'
+      +clickHint+legendHtml
+      +'<div class="cc-w'+(isMulti?' tall':'')+'"><canvas id="'+cid+'"></canvas></div>';
+  }
+  var div=wrapper;
+  col.appendChild(div);
+  var many=range.labels.length>24;
+  var isTwoBar=oc.datasets.length===2&&oc.datasets[0].type==='bar'&&oc.datasets[1].type==='bar';
+  var datasets=oc.datasets.map(function(ds){
+    var vals=range.dkeys.map(function(dk){return getGSVal(did,dk.y,dk.m,ds.key);});
+    var base={label:ds.label,data:vals,borderColor:ds.color,
+      backgroundColor:ds.color+(ds.type==='bar'?'dd':'40'),
+      tension:.3,fill:ds.type!=='bar',
+      pointRadius:many?2:4,borderWidth:ds.type==='bar'?1:2,
+      pointBackgroundColor:ds.color,spanGaps:true,yAxisID:'y'};
+    if(ds.type==='bar'){base.type='bar';base.borderRadius=3;}
+    return base;
+  });
+  if(isTwoBar){
+    var va=range.dkeys.map(function(dk){return getGSVal(did,dk.y,dk.m,oc.datasets[0].key);});
+    var vb=range.dkeys.map(function(dk){return getGSVal(did,dk.y,dk.m,oc.datasets[1].key);});
+    var rv=va.map(function(a,i){return a&&vb[i]?Math.round(vb[i]/a*1000)/10:null;});
+    datasets.push({type:'line',label:'Ratio %',data:rv,
+      borderColor:'#6366F1',backgroundColor:'transparent',
+      tension:.3,fill:false,pointRadius:many?2:3,
+      pointBackgroundColor:'#6366F1',spanGaps:true,yAxisID:'y2',borderDash:[4,3]});
+    var lw=div.querySelector('.legend');
+    if(lw)lw.innerHTML+='<div class="legend-item"><span class="legend-dot" style="background:#6366F1;border-radius:50%"></span>Ratio %</div>';
+  }
+  var opts=chartOpts(oc.unit||'');
+  if(isTwoBar){opts.scales.y2={type:'linear',position:'right',
+    grid:{drawOnChartArea:false},
+    ticks:{font:{size:10},color:'#6366F1',callback:function(v){return v+'%';}},
+    title:{display:true,text:'Ratio %',color:'#6366F1',font:{size:10,weight:'600'}}};}
+  opts.plugins.datalabels={
+    display:function(ctx){
+      if(many)return false;
+      // Hide Ratio % line labels (too cluttered alongside bars)
+      if(ctx.dataset.label==='Ratio %')return false;
+      // Show on both bar and line datasets
+      return true;
+    },
+    color:function(ctx){
+      if(ctx.dataset.type==='bar')return'#333';
+      return ctx.dataset.borderColor||'#555';
+    },
+    anchor:'end',align:'top',font:{size:9,weight:'600'},
+    formatter:function(v){
+      if(v==null)return null;
+      if(oc.unit==='%')return(Math.round(v*10)/10)+'%';
+      if(oc.unit==='Days'||oc.unit==='days'||oc.unit==='rate')return(Math.round(v*100)/100);
+      if(oc.unit==='USD')return v>=1e6?(Math.round(v/1e5)/10)+'M':v>=1000?Math.round(v/1000)+'k':'$'+Math.round(v);
+      return Math.round(v);
+    }
+  };
+  CH[cid]=new Chart(document.getElementById(cid),{
+    type:'bar',
+    data:{labels:range.labels,datasets:datasets},
+    options:opts,plugins:[ChartDataLabels]
+  });
+  // ── Summary total chart (right side) for two-bar plan/actual charts ──
+  if(isTwoBar&&document.getElementById(cid+'-tot')){
+    var totA=va.reduce(function(s,v){return s+(v||0);},0);
+    var totB=vb.reduce(function(s,v){return s+(v||0);},0);
+    var totRatio=totA?Math.round(totB/totA*1000)/10:null;
+    var totLabel0=oc.datasets[0].label, totLabel1=oc.datasets[1].label;
+    var totColor0=oc.datasets[0].color, totColor1=oc.datasets[1].color;
+    var totOpts={
+      responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:18}},
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          display:true,color:'#333',anchor:'end',align:'top',
+          font:{size:9,weight:'700'},
+          formatter:function(v){
+            if(v==null)return null;
+            if(oc.unit==='USD')return v>=1e6?(Math.round(v/1e5)/10)+'M':v>=1000?Math.round(v/1000)+'k':'';
+            return Math.round(v);
+          }
+        }
+      },
+      scales:{
+        y:{display:false,beginAtZero:true},
+        x:{grid:{display:false},ticks:{font:{size:9}}}
+      }
+    };
+    CH[cid+'-tot']=new Chart(document.getElementById(cid+'-tot'),{
+      type:'bar',
+      data:{
+        labels:[totLabel0,totLabel1],
+        datasets:[{
+          data:[totA,totB],
+          backgroundColor:[totColor0+'bb',totColor1+'bb'],
+          borderColor:[totColor0,totColor1],
+          borderWidth:1,borderRadius:4
+        }]
+      },
+      options:totOpts,
+      plugins:[ChartDataLabels]
+    });
+    // Show ratio below total chart
+    if(totRatio!==null){
+      var totCard=document.getElementById(cid+'-tot-card');
+      if(totCard){
+        var ratioEl=document.createElement('div');
+        ratioEl.style.cssText='margin-top:6px;text-align:center;font-size:11px;font-weight:700;color:#6366F1';
+        ratioEl.textContent='Ratio: '+totRatio+'%';
+        totCard.appendChild(ratioEl);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// bod VIEW — LEFT PANEL
+// ═══════════════════════════════════════════════
+function buildbodLeft(){
+  var mO=MN.map(function(m,i){return '<option value="'+i+'"'+(i===selBodM?' selected':'')+'>'+m+'</option>';}).join('');
+  var yO=YRS.map(function(y){return '<option value="'+y+'"'+(y===selBodY?' selected':'')+'>'+y+'</option>';}).join('');
+  var drMO=function(sel){return MN.map(function(m,i){return '<option value="'+i+'"'+(i===sel?' selected':'')+'>'+m+'</option>';}).join('');};
+  var drYO=function(sel){return YRS.map(function(y){return '<option value="'+y+'"'+(y===sel?' selected':'')+'>'+y+'</option>';}).join('');};
+  var html='<div class="lp-sticky">'
+    +'<div class="bod-period-label">Period</div>'
+    +'<div class="bod-period-box">'
+    +'<div class="bod-period-row"><select class="mysel" id="bod-s-m">'+mO+'</select><select class="mysel" id="bod-s-y">'+yO+'</select></div>'
+    +'</div>'
+    +'<div class="lsec" style="margin-top:6px">Chart range</div>'
+    +'<div class="dr-box"><div class="dr-quick">'
+    +'<button class="drq" data-quick="ytd">YTD</button>'
+    +'<button class="drq" data-quick="12m">Last 12M</button>'
+    +'<button class="drq" data-quick="all">All data</button></div>'
+    +'<div class="dr-row"><label>From</label>'
+    +'<select class="drsel" id="bdf-m">'+drMO(drF.m)+'</select>'
+    +'<select class="drsel" id="bdf-y">'+drYO(drF.y)+'</select></div>'
+    +'<div class="dr-row"><label>To</label>'
+    +'<select class="drsel" id="bdt-m">'+drMO(drT.m)+'</select>'
+    +'<select class="drsel" id="bdt-y">'+drYO(drT.y)+'</select></div>'
+    +'<button class="dr-apply" id="dr-apply-b">Apply</button></div>'
+    +'</div>' // close lp-sticky
+    +'<div style="padding:0 13px"><div class="lsec" style="margin-top:10px">Departments</div>';
+
+  // Sort alphabetically by name
+  var sortedDepts=DEPTS.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+  sortedDepts.forEach(function(d){
+    var hasRow=!!getGSRow(d.id,NY,NM);
+    var open=accOpen===d.id;
+    // FIX #5: last data month per dept
+    var lastDM=getLastDataMonth(d.id);
+    var lastLabel,lastClass;
+    if(!lastDM){lastLabel='No data yet';lastClass='miss';}
+    else{
+      lastLabel='Last: '+MN[lastDM.m-1]+' '+lastDM.y;
+      // warn if last data is more than 1 month behind current
+      var monthsAgo=(NY-lastDM.y)*12+(NM-(lastDM.m-1));
+      lastClass=monthsAgo<=1?'ok':(monthsAgo<=2?'warn':'miss');
+    }
+    html+='<div class="acc" id="acc-'+d.id+'">'
+      +'<div class="acc-h'+(open?' open':'')+'" data-dept="'+d.id+'">'
+      +'<span class="ah-dot" style="background:'+d.color+'"></span>'
+      +'<div class="ah-info">'
+      +'<div class="ah-name">'+d.name+'</div>'
+      +'<div class="ah-last '+lastClass+'">'+lastLabel+'</div>'
+      +'</div>'
+      +'<span class="ah-st '+(hasRow?'st-ok':'st-pend')+'"></span>'
+      +'<span class="ah-ch'+(open?' open':'')+'">▶</span>'
+      +'</div>'
+      +'<div class="acc-b'+(open?' open':'')+'" id="ab-'+d.id+'">'+buildAccBody(d)+'</div>'
+      +'</div>';
+  });
+  el('lp-body').innerHTML=html;
+  // Admin: append user management panel below depts
+  if(U&&U.role==='admin'){
+    el('lp-body').innerHTML+=
+      '<div class="lsec" style="margin-top:14px">Admin</div>'
+      +'<div style="background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:10px 11px">'+buildAdminPanel()+'</div>';
+  }
+  // BOD + Admin: change password button at bottom
+  el('lp-body').innerHTML+=
+    '<div class="lsec" style="margin-top:14px">Account</div>'
+    +'<button class="chpw-btn" id="btn-chpw">🔑 Change password</button>'
+    +'<div id="chpw-wrap"></div></div>';
+}
+
+function buildAccBody(dept){
+  // Use BOD selected period
+  var curM0=selBodM; var curY=selBodY;
+  var prevM0=curM0===0?11:curM0-1;
+  var prevY=curM0===0?curY-1:curY;
+  var row=getGSRow(dept.id,curY,curM0);
+  if(!row){
+    // Fall back to latest available
+    var lastDM=getLastDataMonth(dept.id);
+    if(!lastDM){
+      return '<div style="font-size:12px;color:var(--hi);padding:4px 0">No data for '+MN[curM0]+' '+curY+'.</div>'
+        +'<button class="vc-btn" data-dept="'+dept.id+'">View all charts →</button>';
+    }
+    curM0=lastDM.m-1; curY=lastDM.y;
+    prevM0=curM0===0?11:curM0-1; prevY=curM0===0?curY-1:curY;
+    row=getGSRow(dept.id,curY,curM0);
+  }
+  var prevRow=getGSRow(dept.id,prevY,prevM0);
+  var revCount=getRevisionCount(dept.id,curY,curM0);
+  var revBadge=revCount>1?'<span style="font-size:10px;font-weight:600;padding:1px 5px;background:var(--bl-bg);color:var(--bl);border-radius:5px;margin-left:5px">'+ordinal(revCount)+'</span>':'';
+  var rows=dept.kpis.map(function(k){
+    var v=getGSVal(dept.id,curY,curM0,k.k);
+    var pv=prevRow?getGSVal(dept.id,prevY,prevM0,k.k):null;
+    var dlt='',dc='dn';
+    if(v!=null&&pv!=null&&pv!==0){
+      var p=((v-pv)/Math.abs(pv)*100);
+      dlt=(p>=0?'▲':'▼')+Math.abs(p).toFixed(1)+'%';
+      dc=p>=0?'du':'dd';
+    }
+    return '<div class="ks-row">'
+      +'<span class="ks-l">'+k.l+'</span>'
+      +'<span class="ks-v" style="color:'+dept.color+'">'+(v!=null?fmtV(v,k):'—')+'</span>'
+      +(dlt?'<span class="ks-d '+dc+'">'+dlt+'</span>':'')
+      +'</div>';
+  }).join('');
+  var cmt=row?getGSVal(dept.id,curY,curM0,'comment')||'':'';
+  return '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--hi);margin-bottom:6px">Snapshot — '+MN[curM0]+' '+curY+revBadge+'</div>'
+    +'<div>'+rows+'</div>'
+    +(cmt?'<div class="ks-cmt">'+cmt+'</div>':'')
+    +'<button class="vc-btn" data-dept="'+dept.id+'">View all charts →</button>';
+}
+
+function toggleAcc(id){
+  accOpen=accOpen===id?null:id;
+  // Sort alphabetically by name
+  var sortedDepts=DEPTS.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+  sortedDepts.forEach(function(d){
+    var h=document.querySelector('#acc-'+d.id+' .acc-h');
+    var b=el('ab-'+d.id);
+    var c=document.querySelector('#acc-'+d.id+' .ah-ch');
+    var open=accOpen===d.id;
+    if(h)h.classList.toggle('open',open);
+    if(b)b.classList.toggle('open',open);
+    if(c)c.classList.toggle('open',open);
+  });
+  if(accOpen) renderbodRight(accOpen);
+  else        renderbodRight(null);
+}
+function bodViewDept(id){
+  accOpen=id;
+  buildbodLeft();
+  renderbodRight(id);
+  // Silently refresh data in background so latest submissions appear
+  fetchSheetData(function(){
+    buildbodLeft();
+    renderbodRight(id);
+  });
+}
+
+// ── Status helper ─────────────────────────────────────────────────
+// Submitted  = row exists AND all KPI fields filled
+// Pending    = row exists BUT some KPI fields missing
+// Not updated = no row at all
+function getDeptStatus(dept, year, month_0idx){
+  var r = getGSRow(dept.id, year, month_0idx);
+  if(!r) return 'none';
+  var filled = dept.kpis.filter(function(k){
+    return getGSVal(dept.id, year, month_0idx, k.k) != null;
+  }).length;
+  if(filled === dept.kpis.length) return 'full';
+  return 'partial';
+}
+
+// Last submitted_at = latest across ALL rows for this dept this month
+function getLastSubmittedAt(dept, year, month_0idx){
+  var latest = null;
+  for(var i=0;i<GS_DATA.length;i++){
+    var r=GS_DATA[i];
+    if(r[0]===dept.id&&(parseInt(r[1])-1)===month_0idx&&parseInt(r[2])===year){
+      var idx=GS_HDR.indexOf('submitted_at');
+      if(idx>=0&&r[idx]) latest=r[idx];
+    }
+  }
+  return latest||'—';
+}
+
+// ─────────────────────────────────────────────────────────────────
+// bod VIEW — RIGHT PANEL
+// ═══════════════════════════════════════════════
+function renderbodRight(id){
+  killCharts('b_');
+  var body=el('rp-body');
+  var backBtn=el('btn-bod-back');
+
+  if(!id){
+    // FIX #6: hide back button on overview
+    if(backBtn) backBtn.classList.add('hidden');
+    el('rp-title').textContent='All Departments';
+    var subm=DEPTS.filter(function(d){return getDeptStatus(d,NY,NM)==='full';}).length;
+    var pend=DEPTS.filter(function(d){return getDeptStatus(d,NY,NM)==='partial';}).length;
+    el('rp-sub').textContent=MN[NM]+' '+NY+' · '+subm+' submitted · '+pend+' pending';
+    // Sort status table A-Z same as sidebar
+    var sortedForTable=DEPTS.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+    var tRows=sortedForTable.map(function(d){
+      var st=getDeptStatus(d,NY,NM);
+      var ts=getLastSubmittedAt(d,NY,NM);
+      var badgeCls=st==='full'?'bg':st==='partial'?'ba':'';
+      var badgeTxt=st==='full'?'Submitted':st==='partial'?'Pending':'Not updated';
+      var badgeStyle=st==='none'?'background:var(--sf2);color:var(--hi);border:1px solid var(--bd)':'';
+      return '<tr>'
+        +'<td><span style="display:inline-flex;align-items:center;gap:6px">'
+        +'<span style="width:7px;height:7px;border-radius:50%;background:'+d.color+';display:inline-block"></span>'
+        +d.name
+        +'<span style="font-size:10px;font-weight:600;padding:0 5px;background:var(--bl-bg);color:var(--bl);border-radius:4px;margin-left:2px">'+d.abbr+'</span>'
+        +'</span></td>'
+        +'<td style="color:var(--mu)">'+d.mgr+'</td>'
+        +'<td><span class="badge '+badgeCls+'" style="'+badgeStyle+'">'+badgeTxt+'</span></td>'
+        +'<td style="color:var(--mu);font-size:11px">'+ts+'</td>'
+        +'<td><button class="vc-btn" style="width:auto;padding:4px 10px;margin:0" data-dept="'+d.id+'">Charts →</button></td>'
+        +'</tr>';
+    }).join('');
+    var ovCharts=DEPTS.map(function(d,i){
+      return '<div class="cc">'
+        +'<div class="cc-t" style="display:flex;align-items:center;gap:6px">'
+        +'<span style="width:8px;height:8px;border-radius:50%;background:'+d.color+';display:inline-block;flex-shrink:0"></span>'
+        +d.name+' — '+d.kpis[0].l+'</div>'
+        +'<div class="cc-s">'+d.kpis[0].u+'</div>'
+        +'<div class="cc-w"><canvas id="b_ov_'+i+'"></canvas></div></div>';
+    }).join('');
+    body.innerHTML='<div class="stbl-w">'
+      +'<div class="stbl-h">Submission status — '+MN[NM]+' '+NY
+      +'<span style="font-size:11px;font-weight:400;color:var(--mu)">'+subm+'/'+DEPTS.length+' submitted</span></div>'
+      +'<table><thead><tr><th>Department</th><th>Manager</th><th>Status</th><th>Submitted at</th><th></th></tr></thead>'
+      +'<tbody>'+tRows+'</tbody></table></div>'
+      +'<div class="charts-col">'+ovCharts+'</div>';
+    DEPTS.forEach(function(d,i){
+      var range=buildRange(d.id);
+      var vals=range.dkeys.map(function(dk){return getGSVal(d.id,dk.y,dk.m,d.kpis[0].k);});
+      CH['b_ov_'+i]=mkLine('b_ov_'+i,range.labels,d.kpis[0].l,vals,d.color,d.kpis[0].u);
+    });
+    return;
+  }
+
+  // FIX #6: show back button when viewing a specific dept
+  if(backBtn) backBtn.classList.remove('hidden');
+  var mw2=el('rp-msg-btn-wrap');
+  if(mw2){mw2.innerHTML='<button class="msg-action-btn" id="rp-open-msg" data-dept="'+id+'">&#x1F4AC; Message</button>';}
+  var dept=DEPTS.find(function(d){return d.id===id;});
+  el('rp-title').textContent=dept.name;
+  el('rp-sub').textContent=''; // purpose removed (V14)
+  var range=buildRange(id);
+  body.innerHTML='<div class="charts-grid" id="b-col"></div>';
+  var col=el('b-col');
+  if(dept.overlayCharts){
+    var sortedOC2 = dept.overlayCharts.slice().sort(function(a,b){
+      var aTwo = a.datasets.length===2&&a.datasets[0].type==='bar'&&a.datasets[1].type==='bar';
+      var bTwo = b.datasets.length===2&&b.datasets[0].type==='bar'&&b.datasets[1].type==='bar';
+      return (bTwo?1:0)-(aTwo?1:0);
+    });
+    sortedOC2.forEach(function(oc,i){
+      renderOverlayChart(col,'b_oc_'+i,oc,range,id,true);
+    });
+  } else {
+    dept.kpis.forEach(function(kpi,i){
+      var vals=range.dkeys.map(function(dk){return getGSVal(id,dk.y,dk.m,kpi.k);});
+      var cid='b_'+i;
+      var div=document.createElement('div');div.className='cc';
+      div.innerHTML='<div class="cc-t">'+kpi.l+'</div>'
+        +'<div class="cc-s">'+kpi.u+' · '+rangeLabel(range)+'</div>'
+        +'<div class="cc-w"><canvas id="'+cid+'"></canvas></div>';
+      col.appendChild(div);
+      CH[cid]=mkLine(cid,range.labels,kpi.l,vals,dept.color,kpi.u);
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function buildRange(did){
+  var labels=[],dkeys=[];
+  var cy=drF.y,cm=drF.m;
+  while(cy<drT.y||(cy===drT.y&&cm<=drT.m)){
+    labels.push(MN[cm]+' '+cy);
+    dkeys.push({dept:did,y:cy,m:cm}); // m is 0-indexed
+    cm++; if(cm>11){cm=0;cy++;} if(labels.length>60)break;
+  }
+  return{labels:labels,dkeys:dkeys};
+}
+function rangeLabel(range){
+  if(!range.labels.length)return'';
+  return range.labels[0]+(range.labels.length>1?' → '+range.labels[range.labels.length-1]:'');
+}
+function killCharts(pfx){
+  Object.keys(CH).filter(function(k){return k.indexOf(pfx)===0;})
+    .forEach(function(k){try{CH[k].destroy();}catch(e){}delete CH[k];});
+}
+
+// FIX #1: fmtV rounds to 1 decimal for percentages, no float noise
+function fmtV(v,k){
+  if(v==null)return'—';
+  if(k.t==='c')return'$'+Number(Math.round(v)).toLocaleString();
+  if(k.t==='p')return(Math.round(v*10)/10)+(k.u==='%'?'%':'');
+  return String(Math.round(v));
+}
+
+function chartOpts(unit){
+  return{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){
+      var v=ctx.raw;if(v==null)return'No data';
+      // FIX #1: round tooltip values
+      if(unit==='%')return(Math.round(v*10)/10)+'%';
+      if(unit==='USD')return'$'+Math.round(v).toLocaleString();
+      if(unit==='hrs'||unit==='count'||unit==='cnt'||unit==='ppl')return Math.round(v).toLocaleString();
+      return(Math.round(v*100)/100).toString();
+    }}}},
+    layout:{padding:{top:20}},
+    scales:{
+      y:{beginAtZero:false,grid:{color:'rgba(0,0,0,.05)'},
+         afterDataLimits:function(axis){
+           var range=axis.max-axis.min;
+           var isCountUnit=unit==='count'||unit==='cnt'||unit==='ppl'||unit==='No.'||unit==='Rate';
+           // Pad TOP by 15% so datalabels above tallest bar are not clipped
+           axis.max=axis.max+range*0.15;
+           // Bottom padding
+           if(isCountUnit){axis.min=0;return;}
+           if(axis.min>0)axis.min=Math.max(0,axis.min-range*0.10);
+           else axis.min=axis.min-Math.abs(axis.min)*0.10;
+         },
+         ticks:{font:{size:10},callback:function(v){
+           if(unit==='%')return(Math.round(v*10)/10)+'%';
+           if(unit==='USD')return v>=1e6?(Math.round(v/1e5)/10)+'M':v>=1000?Math.round(v/1000)+'k':'$'+Math.round(v);
+           if(unit==='hrs'||unit==='count'||unit==='cnt'||unit==='ppl')return Math.round(v).toLocaleString();
+           return Math.round(v*100)/100;
+         }}},
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45,
+         autoSkip:true,maxTicksLimit:14}}
+    }
+  };
+}
+
+function mkLine(id,labels,label,data,color,unit){
+  var many=labels.length>24;
+  var opts=chartOpts(unit);
+  opts.plugins.datalabels={
+    display:!many,color:color,anchor:'end',align:'top',
+    font:{size:9,weight:'600'},
+    formatter:function(v){
+      if(v==null)return null;
+      if(unit==='%')return(Math.round(v*10)/10)+'%';
+      if(unit==='Days'||unit==='days')return(Math.round(v*10)/10);
+      if(unit==='USD')return v>=1e6?(Math.round(v/1e5)/10)+'M':v>=1000?Math.round(v/1000)+'k':'';
+      return Math.round(v);
+    }
+  };
+  return new Chart(document.getElementById(id),{
+    type:'line',
+    data:{labels:labels,datasets:[{label:label,data:data,
+      borderColor:color,backgroundColor:color+'40',tension:.3,fill:true,
+      borderWidth:2,
+      pointRadius:many?2:4,pointBackgroundColor:color,
+      pointBorderColor:color,pointBorderWidth:2,
+      spanGaps:true}]},
+    options:opts,plugins:[ChartDataLabels]
+  });
+}
+
+
+// ═══════════════════════════════════════════════
+// MESSAGING — BOD <-> Dept 2-way communication
+// ═══════════════════════════════════════════════
+var msgDeptTarget=null;
+function getMsgs(){try{var r=localStorage.getItem('cmi_msgs');return r?JSON.parse(r):[];}catch(e){return[];}}
+function saveMsgsLocal(m){try{localStorage.setItem('cmi_msgs',JSON.stringify(m));}catch(e){}}
+// ── Read-status stored separately so poll never wipes it ──
+function getReadStore(){
+  try{var r=localStorage.getItem('cmi_read_'+((U&&U.username)||''));return r?JSON.parse(r):{};
+  }catch(e){return {};}
+}
+function saveReadStore(store){
+  try{localStorage.setItem('cmi_read_'+((U&&U.username)||''),JSON.stringify(store));}catch(e){}
+}
+function markMsgRead(msgId){
+  var s=getReadStore(); s[String(msgId)]=true; saveReadStore(s);
+}
+function isMsgRead(msgId){
+  return !!getReadStore()[String(msgId)];
+}
+
+function getUnreadCount(deptId){
+  var msgs=getMsgs();
+  return msgs.filter(function(m){
+    var mine=(U&&U.role==='dept'&&m.dept===deptId&&m.fromRole!=='dept')
+            ||(U&&(U.role==='bod'||U.role==='admin')&&m.dept===deptId&&m.fromRole==='dept');
+    return mine && !isMsgRead(m.id);
+  }).length;
+}
+function getDeptUnreadBadge(deptId){
+  var n=getUnreadCount(deptId);
+  return n>0?'<span class="unread-dot" title="'+n+' unread"></span>':'';
+}
+var MSG_POLL_TIMER    = null;   // active when panel is open
+var MSG_BG_TIMER      = null;   // background unread-dot refresh (60s)
+var KPI_REFRESH_TIMER = null;   // auto-refresh KPI data every 2 min
+
+// ── Background poll: refresh unread counts silently ──
+function startMsgBackgroundPoll(){
+  if(MSG_BG_TIMER) clearInterval(MSG_BG_TIMER);
+  MSG_BG_TIMER = setInterval(function(){
+    if(!U) return;
+    // Dept users only need their dept msgs; bod/admin see all
+    var pollDept=(U&&U.role==='dept')?U.dept:'';
+    loadMsgsFromGAS(pollDept, function(){ updateUnreadUI(); });
+  }, 60000);
+  // Auto-refresh KPI data every 2 minutes silently
+  if(KPI_REFRESH_TIMER) clearInterval(KPI_REFRESH_TIMER);
+  KPI_REFRESH_TIMER = setInterval(function(){
+    if(!U) return;
+    fetchSheetData(function(){
+      // Only re-render if BOD is viewing a dept (not overview)
+      if((U.role==='bod'||U.role==='admin') && accOpen){
+        buildbodLeft(); renderbodRight(accOpen);
+      }
+      setSyncBadge('ok', GS_DATA.length);
+    });
+  }, 120000); // every 2 minutes
+}
+
+function stopMsgBackgroundPoll(){
+  if(MSG_BG_TIMER){clearInterval(MSG_BG_TIMER);MSG_BG_TIMER=null;}
+}
+
+// ── Update all unread indicators in the UI ──
+function updateUnreadUI(){
+  var totalUnread = 0;
+  // Dept role only sees their own dept; bod/admin see all
+  var visibleDepts = (U&&U.role==='dept')
+    ? DEPTS.filter(function(d){return d.id===U.dept;})
+    : DEPTS.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+  var sortedDepts = (U&&U.role==='dept') ? visibleDepts
+    : visibleDepts; // already sorted above for bod
+  sortedDepts.forEach(function(d){
+    var n = getUnreadCount(d.id);
+    totalUnread += n;
+    // Update accordion badge (if visible)
+    var nameEl = document.querySelector('#acc-'+d.id+' .ah-name');
+    if(nameEl){
+      // Remove old unread dot, re-add if needed
+      var oldDot = nameEl.querySelector('.unread-dot');
+      if(oldDot) oldDot.remove();
+      if(n > 0){
+        var dot = document.createElement('span');
+        dot.className = 'unread-dot';
+        dot.title = n+' unread';
+        nameEl.appendChild(dot);
+      }
+    }
+    // Update open msg button in rp-msg-btn-wrap if showing this dept
+    if(msgDeptTarget === d.id){
+      // panel is open for this dept — no need to show badge
+    }
+  });
+  // Topbar notification button
+  var notifBtn = el('notif-btn');
+  var notifCount = el('notif-count');
+  var notifList = el('notif-list');
+  if(notifBtn) notifBtn.style.display = totalUnread > 0 ? 'inline-flex' : 'none';
+  if(notifCount) notifCount.textContent = totalUnread;
+  // Populate dropdown list
+  if(notifList){
+    // Sort alphabetically
+    // Only show unread for depts the user can see
+    var scanDepts = (U&&U.role==='dept') ? DEPTS.filter(function(d){return d.id===U.dept;}) : DEPTS;
+    var unreadDepts = scanDepts.filter(function(d){return getUnreadCount(d.id)>0;})
+                               .sort(function(a,b){return a.name.localeCompare(b.name);});
+    if(!unreadDepts.length){
+      notifList.innerHTML='<div class="notif-empty">No unread messages</div>';
+    } else {
+      notifList.innerHTML = unreadDepts.map(function(d){
+        var n = getUnreadCount(d.id);
+        return '<div class="notif-item" data-notif-dept="'+d.id+'" title="Open '+d.name+' messages">'
+          +'<span class="notif-dot" style="background:'+d.color+'"></span>'
+          +'<div class="notif-info">'
+          +'<div class="notif-dept">'+d.name+'</div>'
+          +'<div class="notif-cnt">'+n+' unread message'+(n>1?'s':'')+'</div>'
+          +'</div></div>';
+      }).join('');
+    }
+  }
+  // Update Messages button badge in rp-msg-btn-wrap
+  var openMsgBtn = document.querySelector('#rp-open-msg');
+  if(openMsgBtn && openMsgBtn.dataset.dept){
+    var deptUnread = getUnreadCount(openMsgBtn.dataset.dept);
+    var existing = openMsgBtn.querySelector('.msg-unread-badge');
+    if(deptUnread > 0){
+      if(!existing){
+        var badge = document.createElement('span');
+        badge.className = 'msg-unread-badge';
+        openMsgBtn.appendChild(badge);
+      } else {
+        existing.textContent = deptUnread > 1 ? deptUnread : '';
+      }
+    } else {
+      if(existing) existing.remove();
+    }
+  }
+}
+
+function openMsgPanel(deptId){
+  var dept=DEPTS.find(function(d){return d.id===deptId;});
+  msgDeptTarget=deptId;
+  el('msg-panel-title').textContent='\u{1F4AC} '+(dept?dept.name:deptId);
+  el('msg-panel').classList.add('open');
+  // Load from GAS first, render, mark read
+  loadMsgsFromGAS(deptId, function(msgs){
+    refreshMsgThread();
+    markDeptRead(deptId);
+  });
+  // Poll every 15s while panel is open
+  if(MSG_POLL_TIMER) clearInterval(MSG_POLL_TIMER);
+  MSG_POLL_TIMER = setInterval(function(){
+    if(!msgDeptTarget) return;
+    loadMsgsFromGAS(msgDeptTarget, function(){
+      refreshMsgThread();
+      markDeptRead(msgDeptTarget); // mark newly arrived msgs as read too
+    });
+  }, 15000);
+}
+
+function markDeptRead(deptId){
+  // Mark all messages for this dept as read in the separate read-store
+  var msgs=getMsgs();
+  msgs.forEach(function(m){
+    if(m.dept===deptId) markMsgRead(m.id);
+  });
+  updateUnreadUI();
+}
+function closeMsgPanel(){
+  el('msg-panel').classList.remove('open');
+  msgDeptTarget=null;
+  if(MSG_POLL_TIMER){clearInterval(MSG_POLL_TIMER);MSG_POLL_TIMER=null;}
+}
+function refreshMsgThread(){
+  if(!msgDeptTarget)return;
+  var msgs=getMsgs().filter(function(m){return m.dept===msgDeptTarget;});
+  // Admin cannot see BOD messages
+  if(U&&U.role==='admin') msgs=msgs.filter(function(m){return m.fromRole!=='bod';});
+  var thread=el('msg-thread');
+  if(!msgs.length){thread.innerHTML='<div style="font-size:12px;color:var(--hi);text-align:center;padding:20px">No messages yet.</div>';return;}
+  thread.innerHTML=msgs.map(function(m){
+    var isMe=U&&m.from===U.username;
+    return '<div style="display:flex;flex-direction:column;align-items:'+(isMe?'flex-end':'flex-start')+'">'
+      +'<div class="msg-bubble '+(isMe?'msg-from-me':'msg-from-other')+'">'
+      +esc(m.text)
+      +'<div class="msg-meta">'+m.fromRole.toUpperCase()+(isMe?' (you)':' \u00b7 '+m.from)+' \u00b7 '+new Date(m.ts).toLocaleString()+'</div>'
+      +'</div></div>';
+  }).join('');
+  thread.scrollTop=thread.scrollHeight;
+  updateUnreadUI();
+}
+function sendMsg(){
+  var inp=el('msg-txt-input');var text=(inp.value||'').trim();
+  if(!text||!msgDeptTarget||!U)return;
+  var msg={id:Date.now(),from:U.username,fromRole:U.role,dept:msgDeptTarget,
+    text:text,ts:new Date().toISOString(),read:[U.username]};
+  // Optimistic local update
+  var msgs=getMsgs();msgs.push(msg);saveMsgsLocal(msgs);
+  inp.value='';refreshMsgThread();
+  // Save to GAS via beacon (CORS-free, fire-and-forget)
+  var gasUrl = GAS_MSG_URL||SCRIPT_URL;
+  if(gasUrl){
+    var beacon=new Image();
+    beacon.src=gasUrl
+      +'?action=sendMsg'
+      +'&id='+encodeURIComponent(msg.id)
+      +'&from='+encodeURIComponent(msg.from)
+      +'&fromRole='+encodeURIComponent(msg.fromRole)
+      +'&dept='+encodeURIComponent(msg.dept)
+      +'&text='+encodeURIComponent(msg.text)
+      +'&ts='+encodeURIComponent(msg.ts)
+      +'&t='+Date.now();
+    // Pull fresh from GAS 3s later to confirm save
+    setTimeout(function(){
+      if(msgDeptTarget) loadMsgsFromGAS(msgDeptTarget, function(){refreshMsgThread();});
+    }, 3000);
+  }
+}
+function showMsgHistory(){
+  el('modal-title').textContent='Message History';
+  el('modal-body').innerHTML='<div style="text-align:center;padding:20px;color:var(--hi)">Loading…</div>';
+  el('modal-overlay').style.display='flex';
+  // Dept role: only load their own dept history
+  var histDept=(U&&U.role==='dept')?U.dept:'';
+  loadMsgsFromGAS(histDept, function(allMsgs){
+    // Extra guard: dept users only see their own dept regardless of what loadMsgsFromGAS returns
+    var filtered = (U&&U.role==='dept') ? allMsgs.filter(function(m){return m.dept===U.dept;}) : allMsgs;
+    var msgs=filtered.slice().reverse();
+    el('modal-title').textContent='Message History ('+(msgs.length)+')';
+    el('modal-body').innerHTML=!msgs.length
+      ?'<div style="color:var(--hi);font-size:12px;text-align:center;padding:20px">No messages yet.</div>'
+      :msgs.map(function(m){
+          var dept=DEPTS.find(function(d){return d.id===m.dept;});
+          return '<div class="hist-item"><div class="hist-meta">'+m.fromRole.toUpperCase()+' \u00b7 '+m.from+' \u2192 '+(dept?dept.name:m.dept)+' \u00b7 '+new Date(m.ts).toLocaleString()+'</div><div class="hist-text">'+esc(m.text)+'</div></div>';
+        }).join('');
+  });
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ═══════════════════════════════════════════════
+// CHANGE PASSWORD
+// Passwords are stored in localStorage so they
+// persist across sessions on the same browser.
+// Key: cmi_pw_[username]
+// ═══════════════════════════════════════════════
+function getPass(username){
+  // Priority: localStorage (synced from GAS) → USERS default
+  try{
+    var stored=localStorage.getItem('cmi_pw_'+username);
+    return stored||USERS[username].pass;
+  }catch(e){ return USERS[username] ? USERS[username].pass : ''; }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PASSWORD SYNC — reads from Google Sheet CSV (same CORS-free method
+// as KPI data), writes via GAS GET (works when user is logged into
+// Google in same browser, falls back gracefully if blocked)
+// ══════════════════════════════════════════════════════════════════
+
+// Sheet GID for "Passwords" tab — update this after first deploy
+// To find: open Google Sheet → click Passwords tab → look at URL: ...#gid=XXXXXX
+var PW_SHEET_GID = '220537512'; // tab: Passwords
+
+function getPwSheetUrl(){
+  return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID
+    +'/export?format=csv&gid='+PW_SHEET_GID+'&t='+Date.now();
+}
+
+// Pull passwords from Sheet CSV → localStorage
+function syncPasswordsFromGAS(cb){
+  if(!PW_SHEET_GID){if(cb)cb();return;}
+  fetch(getPwSheetUrl())
+    .then(function(r){return r.text();})
+    .then(function(csv){
+      var rows=parseCSV(csv);
+      // rows[0] = header: username,password,updated_at
+      for(var i=1;i<rows.length;i++){
+        var u=rows[i][0]&&rows[i][0].trim();
+        var p=rows[i][1]&&rows[i][1].trim();
+        if(u&&p){
+          try{localStorage.setItem('cmi_pw_'+u,p);}catch(e){}
+        }
+      }
+      if(cb)cb();
+    })
+    .catch(function(){if(cb)cb();});
+}
+
+// Write password to GAS via Image beacon — bypasses CORS completely
+function pushPasswordToGAS(username, newPass, onDone, onFail){
+  if(!GAS_PW_URL){if(onFail)onFail();return;}
+  var beacon=new Image();
+  beacon.onload=function(){if(onDone)onDone();};
+  beacon.onerror=function(){if(onDone)onDone();}; // GAS returns HTML so img errors — still fired
+  beacon.src=GAS_PW_URL
+    +'?action=setPassword'
+    +'&username='+encodeURIComponent(username)
+    +'&password='+encodeURIComponent(newPass)
+    +'&t='+Date.now();
+  // Assume success after short delay since beacon gives no readable response
+  setTimeout(function(){if(onDone)onDone();}, 2000);
+}
+
+// ═══════════════════════════════════════════════
+// DRILL-DOWN — click chart → full-screen modal
+// ═══════════════════════════════════════════════
+var drillChart=null;
+function openDrill(title, chartInstance, sub){
+  if(!chartInstance) return;
+  var ov=el('drill-ov');
+  el('drill-title').textContent=title;
+  if(el('drill-sub'))el('drill-sub').textContent=sub||'';
+  // Build legend from chart datasets
+  var legHtml='';
+  if(chartInstance&&chartInstance.data&&chartInstance.data.datasets){
+    var dsList=chartInstance.data.datasets.filter(function(ds){return ds.label;});
+    if(dsList.length>1||chartInstance.config.type==='bar'){
+      legHtml='<div class="drill-legend-row">'
+        +dsList.map(function(ds){
+          var isBar=ds.type==='bar'||chartInstance.config.type==='bar';
+          var swatch=isBar
+            ?'<span class="drill-leg-dot" style="background:'+(Array.isArray(ds.backgroundColor)?ds.backgroundColor[0]:ds.backgroundColor)+'"></span>'
+            :'<span class="drill-leg-line" style="background:'+ds.borderColor+'"></span>';
+          return '<div class="drill-leg-item">'+swatch+ds.label+'</div>';
+        }).join('')
+        +'</div>';
+    }
+  }
+  el('drill-body').innerHTML=legHtml+'<div class="drill-cw"><canvas id="drill-canvas"></canvas></div>';
+  ov.style.display='flex';
+  // Clone chart config into drill canvas
+  if(drillChart){try{drillChart.destroy();}catch(e){}}
+  var src=chartInstance;
+  var cfg={
+    type:src.config.type,
+    data:JSON.parse(JSON.stringify(src.config.data)),
+    options:JSON.parse(JSON.stringify(src.config.options)),
+    plugins:src.config.plugins
+  };
+  // Bigger fonts + restore afterDataLimits + layout padding for drill view
+  if(!cfg.options.layout) cfg.options.layout={};
+  cfg.options.layout.padding={top:20};
+  if(cfg.options.scales){
+    if(cfg.options.scales.x) cfg.options.scales.x.ticks={font:{size:11}};
+    if(cfg.options.scales.y){
+      cfg.options.scales.y.ticks={font:{size:11}};
+      // Re-apply afterDataLimits (lost by JSON.parse — functions stripped)
+      cfg.options.scales.y.afterDataLimits=function(axis){
+        var range=axis.max-axis.min;
+        axis.max=axis.max+range*0.15; // top pad
+        if(axis.min>0)axis.min=Math.max(0,axis.min-range*0.10);
+        // For zero-based charts keep min at 0
+        if(axis.min<0)axis.min=0;
+      };
+    }
+  }
+  if(cfg.options.plugins&&cfg.options.plugins.datalabels){
+    cfg.options.plugins.datalabels.font={size:11,weight:'700'};
+  }
+  drillChart=new Chart(el('drill-canvas'),cfg);
+}
+function closeDrill(){
+  el('drill-ov').style.display='none';
+  if(drillChart){try{drillChart.destroy();}catch(e){} drillChart=null;}
+}
+
+// ═══════════════════════════════════════════════
+// MESSAGE SYNC from GAS Sheet CSV
+// ═══════════════════════════════════════════════
+var MSG_SHEET_GID = '921732954'; // tab: Messages
+function getMsgSheetUrl(){
+  return 'https://docs.google.com/spreadsheets/d/'+SHEET_ID
+    +'/export?format=csv&gid='+MSG_SHEET_GID+'&t='+Date.now();
+}
+// ── loadMsgsFromGAS: read from Sheet CSV (CORS-free, same as KPI data) ──
+// GAS fetch fails due to CORS (HtmlService). CSV export is always accessible.
+// MSG_SHEET_GID points to the "Messages" tab auto-created by GAS on first send.
+// Write path: sendMsg → image beacon → GAS (already working, messages appear in sheet).
+function loadMsgsFromGAS(dept, cb){
+  if(!MSG_SHEET_GID){
+    // No sheet tab yet → use localStorage only
+    var localAll=getMsgs();
+    // Dept users should only see own dept
+    if(U&&U.role==='dept') localAll=localAll.filter(function(m){return m.dept===U.dept;});
+    if(cb) cb(dept ? localAll.filter(function(m){return m.dept===dept;}) : localAll);
+    return;
+  }
+  var url = getMsgSheetUrl(); // CSV export URL, CORS-free
+  fetch(url)
+    .then(function(r){return r.text();})
+    .then(function(csv){
+      var rows = parseCSV(csv);
+      // Header row: id,from,fromRole,dept,text,ts
+      var sheetMsgs = [];
+      for(var i=1;i<rows.length;i++){
+        var r=rows[i];
+        if(!r[0]||!r[4]) continue; // skip empty rows
+        sheetMsgs.push({
+          id:r[0], from:r[1]||'', fromRole:r[2]||'',
+          dept:r[3]||'', text:r[4]||'', ts:r[5]||'', read:[]
+        });
+      }
+      // Preserve local read-status
+      var local = getMsgs();
+      var localMap = {};
+      local.forEach(function(m){ localMap[String(m.id)] = m; });
+      sheetMsgs.forEach(function(m){
+        var lm = localMap[String(m.id)];
+        if(lm) m.read = lm.read || [];
+      });
+      // Keep locally-created msgs not yet on sheet (optimistic, just sent)
+      var sheetIds = sheetMsgs.map(function(m){return String(m.id);});
+      local.forEach(function(lm){
+        if(sheetIds.indexOf(String(lm.id)) < 0) sheetMsgs.push(lm);
+      });
+      sheetMsgs.sort(function(a,b){return String(a.ts)<String(b.ts)?-1:1;});
+      // Filter by dept if requested
+      var result = dept ? sheetMsgs.filter(function(m){return m.dept===dept;}) : sheetMsgs;
+      // For dept users: only cache own dept msgs to prevent cross-dept leakage
+      var toCache = (U&&U.role==='dept') ? sheetMsgs.filter(function(m){return m.dept===U.dept;}) : sheetMsgs;
+      saveMsgsLocal(toCache);
+      if(cb) cb(result);
+    })
+    .catch(function(){
+      // Sheet unavailable → fall back to localStorage
+      var local = getMsgs();
+      if(U&&U.role==='dept') local=local.filter(function(m){return m.dept===U.dept;});
+      if(cb) cb(dept ? local.filter(function(m){return m.dept===dept;}) : local);
+    });
+}
+
+// Legacy alias
+function syncMsgsFromSheet(cb){
+  loadMsgsFromGAS('', function(){if(cb)cb();});
+}
+
+function doLogin(){
+  var u=el('l-u').value.trim().toLowerCase();
+  var p=el('l-p').value;
+  var acc=USERS[u];
+  var errEl=el('l-err');
+  if(!acc){
+    errEl.textContent='Unknown username.';
+    errEl.style.cssText='color:var(--rd);font-size:12px;margin-top:9px;padding:7px 10px;background:var(--rd-bg);border-radius:var(--r);display:block';
+    return;
+  }
+  // Check against stored password (or default)
+  if(getPass(u)!==p){
+    errEl.textContent='Incorrect password.';
+    errEl.style.cssText='color:var(--rd);font-size:12px;margin-top:9px;padding:7px 10px;background:var(--rd-bg);border-radius:var(--r);display:block';
+    return;
+  }
+  errEl.style.display='none';
+  U=Object.assign({},acc,{username:u});
+  el('pg-login').style.display='none';
+  el('pg-app').style.display='flex';
+  // t-av avatar circle removed in V14
+  // t-badge and t-name removed in V14 (topbar cleaner)
+  setSyncBadge('loading');
+  startMsgBackgroundPoll(); // start 60s background msg poll
+  // Persist session so F5 doesn't log out
+  try{sessionStorage.setItem('cmi_u',JSON.stringify({
+    username:u,role:U.role,dept:U.dept||null,
+    name:U.name,color:U.color,ini:U.ini||'',
+    selY:selY,selM:selM,selBodY:selBodY,selBodM:selBodM
+  }));}catch(e){}
+  fetchSheetData(function(){
+    if(U.role==='bod'||U.role==='admin'){
+      buildbodLeft(); renderbodRight(null);
+    } else {
+      deptId=U.dept; selY=NY; selM=NM;
+      buildDeptLeft(); renderDeptRight();
+    }
+  });
+}
+
+function showChangePw(){
+  var wrap=el('chpw-wrap');
+  if(!wrap)return;
+  // Toggle: if already open, close it
+  if(wrap.innerHTML.trim()){wrap.innerHTML='';return;}
+  wrap.innerHTML=
+    '<div class="pw-modal">'
+    +'<label>Current password</label>'
+    +'<input type="password" id="pw-cur" placeholder="Current password">'
+    +'<label>New password</label>'
+    +'<input type="password" id="pw-new" placeholder="At least 6 characters">'
+    +'<label>Confirm new password</label>'
+    +'<input type="password" id="pw-cfm" placeholder="Repeat new password">'
+    +'<button class="pw-save" id="pw-save-btn">Save new password</button>'
+    +'<div class="pw-msg" id="pw-msg"></div>'
+    +'</div>';
+  el('pw-save-btn').addEventListener('click',function(){
+    var cur=el('pw-cur').value;
+    var nw=el('pw-new').value;
+    var cfm=el('pw-cfm').value;
+    var msg=el('pw-msg');
+    if(cur!==getPass(U.username)){
+      msg.textContent='Current password is incorrect.';
+      msg.style.cssText='font-size:11px;text-align:center;display:block;color:var(--rd)';return;
+    }
+    if(nw.length<6){
+      msg.textContent='New password must be at least 6 characters.';
+      msg.style.cssText='font-size:11px;text-align:center;display:block;color:var(--rd)';return;
+    }
+    if(nw!==cfm){
+      msg.textContent='Passwords do not match.';
+      msg.style.cssText='font-size:11px;text-align:center;display:block;color:var(--rd)';return;
+    }
+    // Save locally first
+    try{ localStorage.setItem('cmi_pw_'+U.username, nw); }catch(e){}
+    msg.textContent='✓ Saving…';
+    msg.style.cssText='font-size:11px;text-align:center;display:block;color:var(--am)';
+    if(GAS_PW_URL){
+      pushPasswordToGAS(
+        U.username, nw,
+        function(){ // success
+          msg.textContent='✓ Password changed & synced across all devices.';
+          msg.style.cssText='font-size:11px;text-align:center;display:block;color:var(--gn)';
+          setTimeout(function(){wrap.innerHTML='';},2500);
+        },
+        function(errDetail){ // fail — already saved locally, tell user
+          msg.textContent='✓ Saved on this device. To sync: open the app once while logged into Google.';
+          msg.style.cssText='font-size:11px;text-align:center;display:block;color:var(--am)';
+          setTimeout(function(){wrap.innerHTML='';},4000);
+        }
+      );
+    } else {
+      msg.textContent='✓ Password changed (this browser only). Set GAS_PW_URL to sync across devices.';
+      msg.style.cssText='font-size:11px;text-align:center;display:block;color:var(--gn)';
+      setTimeout(function(){wrap.innerHTML='';},2500);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN — user management panel in BOD sidebar
+// ═══════════════════════════════════════════════
+function buildAdminPanel(){
+  var rows=Object.entries(USERS).map(function(entry){
+    var uname=entry[0], acc=entry[1];
+    var roleLabel=acc.role==='bod'?'BOD':acc.role==='admin'?'Admin':(acc.dept||acc.role);
+    var hasCusPw=false;
+    try{hasCusPw=!!localStorage.getItem('cmi_pw_'+uname);}catch(e){}
+    return '<div style="display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--bd)">'
+      +'<span style="width:7px;height:7px;border-radius:50%;background:'+acc.color+';flex-shrink:0"></span>'
+      +'<span style="flex:1;font-size:12px;font-weight:500">'+uname+'</span>'
+      +'<span style="font-size:10px;color:var(--mu)">'+roleLabel+'</span>'
+      +(hasCusPw?'<span title="Custom password set" style="font-size:10px;color:var(--am)">🔑</span>':'')
+      +'</div>';
+  }).join('');
+  return '<div style="font-size:10px;color:var(--hi);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.7px">User accounts</div>'
+    +rows
+    +'<div style="font-size:10px;color:var(--hi);margin-top:8px;line-height:1.5">🔑 = custom password set<br>Passwords stored in browser localStorage.</div>';
+}
+
+// ═══════════════════════════════════════════════
+// EVENT DELEGATION — zero inline handlers
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',function(){
+  // Pre-load passwords from GAS before enabling login
+  // Disable login button while syncing so user always gets latest password
+  var loginBtn=el('btn-login');
+  loginBtn.disabled=true;
+  loginBtn.textContent='Syncing…';
+  // ── Restore session from sessionStorage (survives F5) ──
+  (function restoreSession(){
+    try{
+      var saved=sessionStorage.getItem('cmi_u');
+      if(!saved)return;
+      var sess=JSON.parse(saved);
+      var acc=USERS[sess.username];
+      if(!acc)return;
+      U=Object.assign({},acc,{username:sess.username});
+      if(sess.selY)selY=sess.selY;
+      if(sess.selM!=null)selM=sess.selM;
+      if(sess.selBodY)selBodY=sess.selBodY;
+      if(sess.selBodM!=null)selBodM=sess.selBodM;
+      el('pg-login').style.display='none';
+      el('pg-app').style.display='flex';
+      setSyncBadge('loading');
+      startMsgBackgroundPoll();
+      fetchSheetData(function(){
+        if(U.role==='bod'||U.role==='admin'){
+          buildbodLeft(); renderbodRight(null);
+        } else {
+          deptId=U.dept; buildDeptLeft(); renderDeptRight();
+        }
+      });
+    }catch(e){}
+  })();
+  syncPasswordsFromGAS(function(){
+    loginBtn.disabled=false;
+    loginBtn.textContent='Sign in';
+  });
+  el('btn-login').addEventListener('click',doLogin);
+  el('btn-logout').addEventListener('click',doLogout);
+  el('l-p').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+  el('l-u').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+
+  // Drill-down modal close & export
+  el('drill-cls-btn').addEventListener('click',closeDrill);
+
+  // ── Notification dropdown toggle ──
+  document.body.addEventListener('click',function(e){
+    var notifBtn=el('notif-btn'),notifPanel=el('notif-panel');
+    // Toggle on button click
+    if(e.target.closest('#notif-btn')){
+      if(notifPanel) notifPanel.classList.toggle('open');
+      return;
+    }
+    // Click on a dept item → open msg panel for that dept
+    var notifItem=e.target.closest('[data-notif-dept]');
+    if(notifItem){
+      var dId=notifItem.dataset.notifDept;
+      if(notifPanel) notifPanel.classList.remove('open');
+      // If BOD, navigate to that dept first
+      if(U&&(U.role==='bod'||U.role==='admin')) bodViewDept(dId);
+      openMsgPanel(dId);
+      return;
+    }
+    // Close if clicking outside
+    if(notifPanel&&notifPanel.classList.contains('open')){
+      if(!e.target.closest('#notif-wrap')) notifPanel.classList.remove('open');
+    }
+  });
+  el('drill-ov').addEventListener('click',function(e){if(e.target===el('drill-ov'))closeDrill();});
+  el('drill-exp-btn').addEventListener('click',function(){
+    if(!drillChart)return;
+    // Build filename: title + date-range + timestamp
+    var title=(el('drill-title').textContent||'chart').replace(/[/\\?%*:|"<>]/g,'-').trim();
+    var now=new Date();
+    var ts=now.getFullYear()+''+String(now.getMonth()+1).padStart(2,'0')
+           +String(now.getDate()).padStart(2,'0')
+           +'-'+String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+    var rangeStr=(el('drill-sub')?el('drill-sub').textContent:'').replace(/→/g,'to').replace(/\s+/g,'-').trim();
+    var filename=title+(rangeStr?'_'+rangeStr:'')+'_'+ts+'.png';
+    // Render with white background (prevents transparent/checkerboard)
+    var origCanvas=drillChart.canvas;
+    var tmpCanvas=document.createElement('canvas');
+    tmpCanvas.width=origCanvas.width;
+    tmpCanvas.height=origCanvas.height;
+    var tmpCtx=tmpCanvas.getContext('2d');
+    tmpCtx.fillStyle='#ffffff';
+    tmpCtx.fillRect(0,0,tmpCanvas.width,tmpCanvas.height);
+    tmpCtx.drawImage(origCanvas,0,0);
+    var a=document.createElement('a');
+    a.href=tmpCanvas.toDataURL('image/png');
+    a.download=filename;
+    a.click();
+  });
+
+  // Chart grid click → drill-down
+  document.body.addEventListener('click',function(e){
+    var cc=e.target.closest('.charts-grid .cc');
+    if(cc&&cc.dataset.chartId){
+      var chart=CH[cc.dataset.chartId];
+      if(chart){
+        var sub=cc.dataset.chartSub||'';
+        openDrill(cc.dataset.chartTitle||'Chart Detail',chart,sub);
+      }
+    }
+  });
+
+  // FIX #6: back button wired here
+  el('btn-bod-back').addEventListener('click',function(){
+    accOpen=null; buildbodLeft(); renderbodRight(null);
+  });
+
+  // sync badge click to refresh
+  el('sync-badge').addEventListener('click',function(){
+    if(!U)return;
+    fetchSheetData(function(){
+      if(U.role==='bod'||U.role==='admin'){buildbodLeft();renderbodRight(accOpen);}
+      else{buildDeptLeft();renderDeptRight();}
+    });
+  });
+
+  el('lp-body').addEventListener('click',function(e){
+    var t=e.target;
+    var ah=t.closest('.acc-h');if(ah){toggleAcc(ah.dataset.dept);return;}
+    if((t.classList.contains('vc-btn')||t.closest('.vc-btn'))&&(t.dataset.dept||t.closest('[data-dept]'))){
+      var dept=(t.dataset.dept||t.closest('[data-dept]').dataset.dept);
+      bodViewDept(dept);return;
+    }
+    if(t.closest('#sv-btn')){saveDept();return;}
+    if(t.id==='btn-unlock'||t.closest('#btn-unlock')){UNLOCKED[deptId+'_'+selY+'_'+selM]=true;buildDeptLeft();return;}
+    if(t.id==='btn-chpw'||t.closest('#btn-chpw')){showChangePw();return;}
+    if(t.dataset.quick){setQ(t.dataset.quick);return;}
+    if(t.id==='dr-apply-d'||t.id==='dr-apply-b'){applyDR();return;}
+  });
+  el('lp-body').addEventListener('change',function(e){
+    if(e.target.id==='s-m'||e.target.id==='s-y'){onPC();return;}
+    if(e.target.id==='bod-s-m'||e.target.id==='bod-s-y'){
+      var bm=el('bod-s-m'),by=el('bod-s-y');
+      if(bm)selBodM=parseInt(bm.value);
+      if(by)selBodY=parseInt(by.value);
+      buildbodLeft();
+      return;
+    }
+  });
+  el('rp-body').addEventListener('click',function(e){
+    var t=e.target;
+    var btn=t.closest('[data-dept]');
+    if(btn&&btn.classList.contains('vc-btn')){bodViewDept(btn.dataset.dept);return;}
+    if(t.classList.contains('vc-btn')&&t.dataset.dept){bodViewDept(t.dataset.dept);}
+  });
+  document.body.addEventListener('click',function(e){
+    var t=e.target;
+    if(t.id==='rp-open-msg'||t.closest('#rp-open-msg')){
+      var d=t.dataset.dept||(t.closest('[data-dept]')||{}).dataset.dept||deptId;
+      if(d)openMsgPanel(d);return;}
+    if(t.id==='rp-hist-btn'||t.closest('#rp-hist-btn')){showMsgHistory();return;}
+    if(t.id==='msg-panel-close-btn'){closeMsgPanel();return;}
+    if(t.id==='msg-send-btn'){sendMsg();return;}
+    if(t.id==='modal-close-x'||t===el('modal-overlay')){el('modal-overlay').style.display='none';return;}
+  });
+  el('msg-txt-input').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}});
+});
+</script>
+</body>
+</html>
