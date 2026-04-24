@@ -170,7 +170,6 @@ button{cursor:pointer}
   background:var(--sf);color:var(--tx);resize:none;min-height:50px;
   width:100%;font-family:inherit;font-size:12px;line-height:1.4}
 .ki-ta:focus{outline:none;border-color:var(--bl)}
-.ki-note-ta{font-size:11px;color:var(--mu);font-style:italic;background:var(--sf2)!important;min-height:30px!important;}
 .sv-btn{width:100%;padding:9px;border:none;border-radius:var(--r);
   background:var(--bl);color:#fff;font-size:13px;font-weight:600;
   display:flex;align-items:center;justify-content:center;gap:6px}
@@ -464,11 +463,11 @@ var DEPTS = [
   {id:'PROD', name:'Production', abbr:'PROD', color:'#378ADD', ini:'RK', mgr:'Rudy Knoesen',
    purpose:'Deliver boats on time with controlled labour.',
    kpis:[
-     {k:'Schedule_Adherence_pct',   l:'Schedule Adherence',    u:'%',   t:'p', better:'up'},
-     {k:'Labour_Hours_vs_Plan_pct', l:'Labour Hours vs Plan',  u:'%',   t:'p', better:'neutral'},
-     {k:'Rework_Hours_pct',         l:'Rework Hours',          u:'%',   t:'p', better:'down'},
-     {k:'Work_Order_Changes',       l:'Work Order Changes',    u:'No.', t:'i', better:'down'},
-     {k:'Boats_Completed',          l:'Boats Completed',       u:'No.', t:'i', better:'up'},
+     {k:'Schedule_Adherence_pct',   l:'Schedule Adherence',    u:'%',   t:'p'},
+     {k:'Labour_Hours_vs_Plan_pct', l:'Labour Hours vs Plan',  u:'%',   t:'p'},
+     {k:'Rework_Hours_pct',         l:'Rework Hours',          u:'%',   t:'p'},
+     {k:'Work_Order_Changes',       l:'Work Order Changes',    u:'No.', t:'i'},
+     {k:'Boats_Completed',          l:'Boats Completed',       u:'No.', t:'i'},
    ],
    overlayCharts:[
      {title:'Schedule Adherence %',           unit:'%',    datasets:[{key:'Schedule_Adherence_pct',   label:'Schedule Adherence %', color:'#378ADD',type:'line'}]},
@@ -481,12 +480,12 @@ var DEPTS = [
   {id:'QA', name:'Quality Assurance', abbr:'QA', color:'#D4537E', ini:'DA', mgr:'Mr Duy Anh',
    purpose:'Ensure first-time quality.',
    kpis:[
-     {k:'First_Time_Pass_pct',  l:'First Time Pass',    u:'%',   t:'p', better:'up'},
-     {k:'QA_Defects_Logged',    l:'QA Defects Logged',  u:'No.', t:'i', better:'down'},
-     {k:'Defects_Severity_A',   l:'Defects Severity A', u:'No.', t:'i', better:'down'},
-     {k:'Defects_Severity_B',   l:'Defects Severity B', u:'No.', t:'i', better:'down'},
-     {k:'Defects_Severity_C',   l:'Defects Severity C', u:'No.', t:'i', better:'down'},
-     {k:'Avg_Closeout_Days_QA', l:'Avg Close-out Time', u:'Days',t:'p', better:'down'},
+     {k:'First_Time_Pass_pct',  l:'First Time Pass',    u:'%',   t:'p'},
+     {k:'QA_Defects_Logged',    l:'QA Defects Logged',  u:'No.', t:'i'},
+     {k:'Defects_Severity_A',   l:'Defects Severity A', u:'No.', t:'i'},
+     {k:'Defects_Severity_B',   l:'Defects Severity B', u:'No.', t:'i'},
+     {k:'Defects_Severity_C',   l:'Defects Severity C', u:'No.', t:'i'},
+     {k:'Avg_Closeout_Days_QA', l:'Avg Close-out Time', u:'Days',t:'p'},
    ],
    overlayCharts:[
      {title:'First Time Pass %',         unit:'%',   datasets:[{key:'First_Time_Pass_pct', label:'FTP %',          color:'#D4537E',type:'line'}]},
@@ -502,9 +501,9 @@ var DEPTS = [
   {id:'DESIGN', name:'Design & Technical', abbr:'D&T', color:'#8B5CF6', ini:'JA', mgr:'James',
    purpose:'Stable design and BOM.',
    kpis:[
-     {k:'BOM_Errors_Identified',  l:'BOM Errors Identified', u:'No.', t:'i', better:'down'},
-     {k:'Production_RFIs',        l:'Production RFIs',       u:'No.', t:'i', better:'down'},
-     {k:'Late_Design_Changes',    l:'Late Design Changes',   u:'No.', t:'i', better:'down'},
+     {k:'BOM_Errors_Identified',  l:'BOM Errors Identified', u:'No.', t:'i'},
+     {k:'Production_RFIs',        l:'Production RFIs',       u:'No.', t:'i'},
+     {k:'Late_Design_Changes',    l:'Late Design Changes',   u:'No.', t:'i'},
    ],
    overlayCharts:[
      {title:'BOM Errors Identified',              unit:'No.', datasets:[{key:'BOM_Errors_Identified', label:'BOM Errors',    color:'#8B5CF6',type:'bar'}]},
@@ -515,9 +514,9 @@ var DEPTS = [
   {id:'PD', name:'Project Development', abbr:'PD', color:'#14B8A6', ini:'PL', mgr:'Project Lead',
    purpose:'Controlled implementation of change.',
    kpis:[
-     {k:'Active_Projects',         l:'Active Projects',        u:'No.', t:'i', better:'neutral'},
-     {k:'Projects_OnTrack_pct',    l:'Projects On-Track',      u:'%',   t:'p', better:'up'},
-     {k:'Design_Changes_Released', l:'Design Changes Released',u:'No.', t:'i', better:'neutral'},
+     {k:'Active_Projects',         l:'Active Projects',        u:'No.', t:'i'},
+     {k:'Projects_OnTrack_pct',    l:'Projects On-Track',      u:'%',   t:'p'},
+     {k:'Design_Changes_Released', l:'Design Changes Released',u:'No.', t:'i'},
    ],
    overlayCharts:[
      {title:'Active Projects',         unit:'No.', datasets:[{key:'Active_Projects',         label:'Active Projects',  color:'#14B8A6',type:'bar'}]},
@@ -528,9 +527,9 @@ var DEPTS = [
   {id:'SC', name:'Supply Chain', abbr:'SCM', color:'#D85A30', ini:'ML', mgr:'Mr Loc',
    purpose:'Material availability to production.',
    kpis:[
-     {k:'OTIF_to_Production_pct',     l:'OTIF to Production',               u:'%',  t:'p', better:'up'},
-     {k:'Material_Shortages',         l:'Material Shortages Impact Prod.',   u:'No.',t:'i', better:'down'},
-     {k:'Expedited_Freight_Cost_USD', l:'Expedited Freight Cost',            u:'USD',t:'c', better:'down'},
+     {k:'OTIF_to_Production_pct',     l:'OTIF to Production',               u:'%',  t:'p'},
+     {k:'Material_Shortages',         l:'Material Shortages Impact Prod.',   u:'No.',t:'i'},
+     {k:'Expedited_Freight_Cost_USD', l:'Expedited Freight Cost',            u:'USD',t:'c'},
    ],
    overlayCharts:[
      {title:'OTIF to Production %',                   unit:'%',   datasets:[{key:'OTIF_to_Production_pct',     label:'OTIF %',        color:'#D85A30',type:'line'}]},
@@ -541,9 +540,9 @@ var DEPTS = [
   {id:'CID', name:'CID', abbr:'CID', color:'#6366F1', ini:'CL', mgr:'CID Lead',
    purpose:'Drive measurable improvement.',
    kpis:[
-     {k:'CID_Actions_Open',      l:'CID Actions Open',    u:'No.',  t:'i', better:'down'},
-     {k:'CID_Actions_Closed',    l:'CID Actions Closed',  u:'No.',  t:'i', better:'up'},
-     {k:'CID_Avg_Closeout_Days', l:'Avg Close-out Time',  u:'Days', t:'p', better:'down'},
+     {k:'CID_Actions_Open',      l:'CID Actions Open',    u:'No.',  t:'i'},
+     {k:'CID_Actions_Closed',    l:'CID Actions Closed',  u:'No.',  t:'i'},
+     {k:'CID_Avg_Closeout_Days', l:'Avg Close-out Time',  u:'Days', t:'p'},
    ],
    overlayCharts:[
      {title:'CID Actions Open vs Closed', unit:'No.', datasets:[
@@ -556,10 +555,10 @@ var DEPTS = [
   {id:'TL', name:'Thailand Handover', abbr:'TH', color:'#F97316', ini:'PH', mgr:'Phil Harper',
    purpose:'Clean delivery and handover.',
    kpis:[
-     {k:'Handovers_Completed',        l:'Handovers Completed',          u:'No.',t:'i', better:'up'},
-     {k:'Delivery_to_Planned_pct',    l:'Delivery to Planned Date',     u:'%',  t:'p', better:'up'},
-     {k:'Defects_at_Handover',        l:'Defects at Handover',          u:'No.',t:'i', better:'down'},
-     {k:'Outstanding_Issues_Delivery',l:'Outstanding Issues at Delivery',u:'No.',t:'i', better:'down'},
+     {k:'Handovers_Completed',        l:'Handovers Completed',          u:'No.',t:'i'},
+     {k:'Delivery_to_Planned_pct',    l:'Delivery to Planned Date',     u:'%',  t:'p'},
+     {k:'Defects_at_Handover',        l:'Defects at Handover',          u:'No.',t:'i'},
+     {k:'Outstanding_Issues_Delivery',l:'Outstanding Issues at Delivery',u:'No.',t:'i'},
    ],
    overlayCharts:[
      {title:'Handovers Completed',                    unit:'No.', datasets:[{key:'Handovers_Completed',         label:'Handovers',          color:'#F97316',type:'bar'}]},
@@ -573,10 +572,10 @@ var DEPTS = [
   {id:'SALES', name:'Sales', abbr:'SALES', color:'#1D9E75', ini:'MK', mgr:'Mike',
    purpose:'Order intake and pipeline visibility.',
    kpis:[
-     {k:'Orders_Booked_USD',       l:'Orders Booked',            u:'USD', t:'c', better:'up'},
-     {k:'Units_Sold',              l:'Units Sold',               u:'No.', t:'i', better:'up'},
-     {k:'Order_Changes_Post',      l:'Order Changes Post-Contract',u:'No.',t:'i', better:'down'},
-     {k:'Sales_Pipeline_USD',      l:'Sales Pipeline',           u:'USD', t:'c', better:'up'},
+     {k:'Orders_Booked_USD',       l:'Orders Booked',            u:'USD', t:'c'},
+     {k:'Units_Sold',              l:'Units Sold',               u:'No.', t:'i'},
+     {k:'Order_Changes_Post',      l:'Order Changes Post-Contract',u:'No.',t:'i'},
+     {k:'Sales_Pipeline_USD',      l:'Sales Pipeline',           u:'USD', t:'c'},
    ],
    overlayCharts:[
      {title:'Orders Booked vs Pipeline', unit:'USD', datasets:[
@@ -590,10 +589,10 @@ var DEPTS = [
   {id:'MKTG', name:'Marketing', abbr:'MKTG', color:'#EC4899', ini:'NP', mgr:'Nhi Pham',
    purpose:'Lead generation effectiveness.',
    kpis:[
-     {k:'Qualified_Leads',        l:'Qualified Leads',    u:'No.', t:'i', better:'up'},
-     {k:'Cost_Per_Lead_USD',      l:'Cost per Lead',      u:'USD', t:'c', better:'down'},
-     {k:'Conversion_Rate_pct',    l:'Conversion Rate',    u:'%',   t:'p', better:'up'},
-     {k:'Campaigns_Active',       l:'Campaigns Active',   u:'No.', t:'i', better:'neutral'},
+     {k:'Qualified_Leads',        l:'Qualified Leads',    u:'No.', t:'i'},
+     {k:'Cost_Per_Lead_USD',      l:'Cost per Lead',      u:'USD', t:'c'},
+     {k:'Conversion_Rate_pct',    l:'Conversion Rate',    u:'%',   t:'p'},
+     {k:'Campaigns_Active',       l:'Campaigns Active',   u:'No.', t:'i'},
    ],
    overlayCharts:[
      {title:'Qualified Leads',   unit:'No.', datasets:[{key:'Qualified_Leads',     label:'Leads',       color:'#EC4899',type:'bar'}]},
@@ -605,10 +604,10 @@ var DEPTS = [
   {id:'CS', name:'Customer Service', abbr:'CS', color:'#0891B2', ini:'VN', mgr:'Van Nguyen',
    purpose:'Warranty control and resolution.',
    kpis:[
-     {k:'Warranty_Claims_Open',  l:'Warranty Claims Open',  u:'No.', t:'i', better:'down'},
-     {k:'New_Claims',            l:'New Claims',            u:'No.', t:'i', better:'down'},
-     {k:'Avg_Closeout_Days_CS',  l:'Avg Close-out Time',   u:'Days',t:'p', better:'down'},
-     {k:'Repeat_Issues',         l:'Repeat Issues',         u:'No.', t:'i', better:'down'},
+     {k:'Warranty_Claims_Open',  l:'Warranty Claims Open',  u:'No.', t:'i'},
+     {k:'New_Claims',            l:'New Claims',            u:'No.', t:'i'},
+     {k:'Avg_Closeout_Days_CS',  l:'Avg Close-out Time',   u:'Days',t:'p'},
+     {k:'Repeat_Issues',         l:'Repeat Issues',         u:'No.', t:'i'},
    ],
    overlayCharts:[
      {title:'Claims Open vs New', unit:'No.', datasets:[
@@ -622,10 +621,10 @@ var DEPTS = [
   {id:'FIN', name:'Finance', abbr:'FIN', color:'#EF9F27', ini:'MD', mgr:'Mr Dung',
    purpose:'Cash and margin control.',
    kpis:[
-     {k:'Operating_CF_USD',       l:'Operating Cash Flow',    u:'USD', t:'c', better:'up'},
-     {k:'Gross_Margin_pct',       l:'Gross Margin',           u:'%',   t:'p', better:'up'},
-     {k:'Aged_Receivables_USD',   l:'Aged Receivables >60d',  u:'USD', t:'c', better:'down'},
-     {k:'Inventory_Value_USD',    l:'Inventory Value',        u:'USD', t:'c', better:'neutral'},
+     {k:'Operating_CF_USD',       l:'Operating Cash Flow',    u:'USD', t:'c'},
+     {k:'Gross_Margin_pct',       l:'Gross Margin',           u:'%',   t:'p'},
+     {k:'Aged_Receivables_USD',   l:'Aged Receivables >60d',  u:'USD', t:'c'},
+     {k:'Inventory_Value_USD',    l:'Inventory Value',        u:'USD', t:'c'},
    ],
    overlayCharts:[
      {title:'Operating Cash Flow', unit:'USD', datasets:[{key:'Operating_CF_USD',     label:'Cash Flow',     color:'#EF9F27',type:'bar'}]},
@@ -639,10 +638,10 @@ var DEPTS = [
   {id:'HR', name:'Human Resources', abbr:'HR', color:'#7F77DD', ini:'MC', mgr:'Ms Chau',
    purpose:'Workforce stability.',
    kpis:[
-     {k:'Headcount_vs_Plan',  l:'Headcount vs Plan',  u:'No.', t:'i', better:'neutral'},
-     {k:'Staff_Turnover_pct', l:'Staff Turnover',     u:'%',   t:'p', better:'down'},
-     {k:'Absenteeism_pct',    l:'Absenteeism',        u:'%',   t:'p', better:'down'},
-     {k:'Overtime_pct',       l:'Overtime',           u:'%',   t:'p', better:'down'},
+     {k:'Headcount_vs_Plan',  l:'Headcount vs Plan',  u:'No.', t:'i'},
+     {k:'Staff_Turnover_pct', l:'Staff Turnover',     u:'%',   t:'p'},
+     {k:'Absenteeism_pct',    l:'Absenteeism',        u:'%',   t:'p'},
+     {k:'Overtime_pct',       l:'Overtime',           u:'%',   t:'p'},
    ],
    overlayCharts:[
      {title:'Headcount vs Plan', unit:'No.', datasets:[{key:'Headcount_vs_Plan',  label:'Headcount', color:'#7F77DD',type:'bar'}]},
@@ -656,10 +655,10 @@ var DEPTS = [
   {id:'HSE', name:'HSE', abbr:'HSE', color:'#16A34A', ini:'MP', mgr:'Mr Phong',
    purpose:'Safe operations and compliance.',
    kpis:[
-     {k:'TRIR',                   l:'TRIR',                    u:'rate',t:'p', better:'down'},
-     {k:'LTIFR',                  l:'LTIFR',                   u:'rate',t:'p', better:'down'},
-     {k:'Near_Miss_Reports',      l:'Near Miss Reports',       u:'No.', t:'i', better:'up'},
-     {k:'High_Risk_Work_Comp_pct',l:'High-Risk Work Compliance',u:'%',  t:'p', better:'up'},
+     {k:'TRIR',                   l:'TRIR',                    u:'rate',t:'p'},
+     {k:'LTIFR',                  l:'LTIFR',                   u:'rate',t:'p'},
+     {k:'Near_Miss_Reports',      l:'Near Miss Reports',       u:'No.', t:'i'},
+     {k:'High_Risk_Work_Comp_pct',l:'High-Risk Work Compliance',u:'%',  t:'p'},
    ],
    overlayCharts:[
      {title:'TRIR & LTIFR',        unit:'rate', datasets:[
@@ -673,10 +672,10 @@ var DEPTS = [
   {id:'IT', name:'Information Technology', abbr:'IT', color:'#0EA5E9', ini:'IT', mgr:'IT Manager',
    purpose:'Reliable systems and secure infrastructure.',
    kpis:[
-     {k:'System_Uptime_pct',        l:'System Uptime',             u:'%',   t:'p', better:'up'},
-     {k:'Cyber_Incidents',        l:'Cyber Incidents',         u:'No.', t:'i', better:'down'},
-     {k:'Tickets_Closed_SLA_pct', l:'Tickets Closed within SLA',   u:'Days',t:'p', better:'up'},
-     {k:'Enhancement_Delivery',     l:'Enhancement Delivery',      u:'No.', t:'i', better:'up'},
+     {k:'System_Uptime_pct',        l:'System Uptime',             u:'%',   t:'p'},
+     {k:'Cyber_Incidents',        l:'Cyber Incidents',         u:'No.', t:'i'},
+     {k:'Tickets_Closed_SLA_pct', l:'Tickets Closed within SLA',   u:'Days',t:'p'},
+     {k:'Enhancement_Delivery',     l:'Enhancement Delivery',      u:'No.', t:'i'},
    ],
    overlayCharts:[
      {title:'System Uptime %',             unit:'%',    datasets:[{key:'System_Uptime_pct',        label:'Uptime',            color:'#0EA5E9',type:'line'}]},
@@ -688,9 +687,9 @@ var DEPTS = [
   {id:'PROP', name:'Property & Security', abbr:'P&S', color:'#78716C', ini:'PS', mgr:'P&S Manager',
    purpose:'Safe premises and compliant facility operations.',
    kpis:[
-     {k:'Maintenance_Backlog',          l:'Maintenance Backlog',          u:'No.', t:'i', better:'down'},
-     {k:'Fire_OHS_Compliance_pct',     l:'Fire & OHS Compliance',          u:'%',   t:'p', better:'up'},
-     {k:'Security_Incidents',          l:'Security Incidents',            u:'No.', t:'i', better:'down'},
+     {k:'Maintenance_Backlog',          l:'Maintenance Backlog',          u:'No.', t:'i'},
+     {k:'Fire_OHS_Compliance_pct',     l:'Fire & OHS Compliance',          u:'%',   t:'p'},
+     {k:'Security_Incidents',          l:'Security Incidents',            u:'No.', t:'i'},
    ],
    overlayCharts:[
      {title:'Maintenance Backlog',              unit:'No.', datasets:[{key:'Maintenance_Backlog',           label:'Backlog Items',          color:'#84CC16',type:'bar'}]},
@@ -868,7 +867,6 @@ function buildDeptLeft(){
   var row=getGSRow(deptId,selY,selM);
   var saved=!!row;
   var comment=saved?getGSVal(deptId,selY,selM,'comment')||'':'';
-  var mgrMonthlyNote=saved?getGSVal(deptId,selY,selM,'mgr_monthly_note')||'':'';
   // Previous month for delta indicators
   var prevM0=selM===0?11:selM-1;
   var prevY=selM===0?selY-1:selY;
@@ -880,15 +878,11 @@ function buildDeptLeft(){
   var inputs=dept.kpis.map(function(k){
     var v=saved?getGSVal(deptId,selY,selM,k.k):null;
     var pv=prevRow?getGSVal(deptId,prevY,prevM0,k.k):null;
-    var kNote=saved?getGSVal(deptId,selY,selM,'note_'+k.k)||'':'';
     var dlt='',dc='dn';
     if(v!=null&&pv!=null&&pv!==0){
       var p=((v-pv)/Math.abs(pv)*100);
-      var up=p>=0;
-      dlt=(up?'▲':'▼')+Math.abs(p).toFixed(1)+'%';
-      if(k.better==='neutral'){dc='dn';}
-      else if(k.better==='down'){dc=up?'dd':'du';}
-      else{dc=up?'du':'dd';}
+      dlt=(p>=0?'▲':'▼')+Math.abs(p).toFixed(1)+'%';
+      dc=p>=0?'du':'dd';
     }
     var revSpan=revCount>1?'<span class="rev-badge">'+ordinal(revCount)+'</span>':'';
     var deltaSpan=dlt?'<span class="ki-delta '+dc+'">'+dlt+'<span class="ki-vs"> vs '+MN[prevM0]+'</span></span>':'';
@@ -898,11 +892,7 @@ function buildDeptLeft(){
       +'<input class="ki-in" type="number" id="ki-'+k.k+'"'
       +' step="'+(k.t==='p'?'0.01':'1')+'"'
       +' value="'+(v!=null?v:'')+'" placeholder="—"'
-      +(isLocked?' readonly style="background:var(--sf2);color:var(--mu)"':'')+'>'
-      +'<textarea class="ki-ta ki-note-ta" id="kinote-'+k.k+'" rows="1" placeholder="📝 Note for this KPI…"'
-      +(isLocked?' readonly style="background:var(--sf2);color:var(--mu);resize:none;min-height:30px"':' style="min-height:30px"')
-      +'>'+esc(String(kNote||''))+'</textarea>'
-      +'</div>';
+      +(isLocked?' readonly style="background:var(--sf2);color:var(--mu)"':'')+'></div>';
   }).join('');
   var drMO=function(sel){return MN.map(function(m,i){return '<option value="'+i+'"'+(i===sel?' selected':'')+'>'+m+'</option>';}).join('');};
   var drYO=function(sel){return YRS.map(function(y){return '<option value="'+y+'"'+(y===sel?' selected':'')+'>'+y+'</option>';}).join('');};
@@ -920,12 +910,8 @@ function buildDeptLeft(){
     +'<div class="dept-purpose">'+dept.purpose+'</div>'
     +'<div class="ki-list">'+inputs+'</div>'
     +'<div class="ki" style="margin-bottom:13px">'
-    +'<label>Comment (internal)</label>'
+    +'<label>Comment</label>'
     +'<textarea class="ki-ta" id="ki-cmt" placeholder="Notes…">'+comment+'</textarea></div>'
-    +'<div class="ki" style="margin-bottom:13px">'
-    +'<label style="color:var(--am);font-weight:700">📋 Manager Monthly Note <span style="font-weight:400;color:var(--hi)">(visible to BOD)</span></label>'
-    +'<textarea class="ki-ta" id="ki-mgr-note" placeholder="Summary note for BOD review this month…"'
-    +(isLocked?' readonly style="background:var(--sf2);color:var(--mu);resize:none"':'')+'>'+mgrMonthlyNote+'</textarea></div>'
     +(isLocked
         ?'<div class="lock-bar">🔒 Submitted — locked <button class="edit-btn" id="btn-unlock">✏️ Edit &amp; revise</button></div>'
         :'<button class="sv-btn" id="sv-btn"><span class="spin" id="sv-sp"></span><span id="sv-lb">Save KPIs</span></button>'
@@ -980,13 +966,10 @@ function saveDept(){
   sp.style.display='inline-block'; lb.textContent='Saving…';
   ok.style.display='none'; er.style.display='none';
   var payload={dept:deptId, month:selM+1, year:selY, // month+1 for sheet (1-indexed)
-    submitted_by:U.username, comment:el('ki-cmt').value||'',
-    mgr_monthly_note:el('ki-mgr-note')?el('ki-mgr-note').value||'':''};
+    submitted_by:U.username, comment:el('ki-cmt').value||''};
   dept.kpis.forEach(function(k){
     var inp=el('ki-'+k.k);
     if(inp&&inp.value!=='')payload[k.k]=parseFloat(inp.value);
-    var noteInp=el('kinote-'+k.k);
-    if(noteInp&&noteInp.value!=='')payload['note_'+k.k]=noteInp.value;
   });
   if(!SCRIPT_URL){
     // Demo: update local GS_DATA so chart updates immediately
@@ -1114,7 +1097,7 @@ function renderOverlayChart(col, cid, oc, range, did, gridMode){
   var isTwoBar=oc.datasets.length===2&&oc.datasets[0].type==='bar'&&oc.datasets[1].type==='bar';
   var datasets=oc.datasets.map(function(ds){
     var vals=range.dkeys.map(function(dk){return getGSVal(did,dk.y,dk.m,ds.key);});
-    var base={label:ds.label,data:vals,_kpiKey:ds.key||null,borderColor:ds.color,
+    var base={label:ds.label,data:vals,borderColor:ds.color,
       backgroundColor:ds.color+(ds.type==='bar'?'dd':'40'),
       tension:.3,fill:ds.type!=='bar',
       pointRadius:many?2:4,borderWidth:ds.type==='bar'?1:2,
@@ -1126,14 +1109,14 @@ function renderOverlayChart(col, cid, oc, range, did, gridMode){
     var va=range.dkeys.map(function(dk){return getGSVal(did,dk.y,dk.m,oc.datasets[0].key);});
     var vb=range.dkeys.map(function(dk){return getGSVal(did,dk.y,dk.m,oc.datasets[1].key);});
     var rv=va.map(function(a,i){return a&&vb[i]?Math.round(vb[i]/a*1000)/10:null;});
-    datasets.push({type:'line',label:'Ratio %',data:rv,_kpiKey:null,
+    datasets.push({type:'line',label:'Ratio %',data:rv,
       borderColor:'#6366F1',backgroundColor:'transparent',
       tension:.3,fill:false,pointRadius:many?2:3,
       pointBackgroundColor:'#6366F1',spanGaps:true,yAxisID:'y2',borderDash:[4,3]});
     var lw=div.querySelector('.legend');
     if(lw)lw.innerHTML+='<div class="legend-item"><span class="legend-dot" style="background:#6366F1;border-radius:50%"></span>Ratio %</div>';
   }
-  var opts=chartOpts(oc.unit||'',did,oc.datasets[0]&&oc.datasets[0].key,range);
+  var opts=chartOpts(oc.unit||'');
   if(isTwoBar){opts.scales.y2={type:'linear',position:'right',
     grid:{drawOnChartArea:false},
     ticks:{font:{size:10},color:'#6366F1',callback:function(v){return v+'%';}},
@@ -1314,11 +1297,8 @@ function buildAccBody(dept){
     var dlt='',dc='dn';
     if(v!=null&&pv!=null&&pv!==0){
       var p=((v-pv)/Math.abs(pv)*100);
-      var up=p>=0;
-      dlt=(up?'▲':'▼')+Math.abs(p).toFixed(1)+'%';
-      if(k.better==='neutral'){dc='dn';}
-      else if(k.better==='down'){dc=up?'dd':'du';}
-      else{dc=up?'du':'dd';}
+      dlt=(p>=0?'▲':'▼')+Math.abs(p).toFixed(1)+'%';
+      dc=p>=0?'du':'dd';
     }
     return '<div class="ks-row">'
       +'<span class="ks-l">'+k.l+'</span>'
@@ -1327,11 +1307,9 @@ function buildAccBody(dept){
       +'</div>';
   }).join('');
   var cmt=row?getGSVal(dept.id,curY,curM0,'comment')||'':'';
-  var mgrNote=row?getGSVal(dept.id,curY,curM0,'mgr_monthly_note')||'':'';
   return '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--hi);margin-bottom:6px">Snapshot — '+MN[curM0]+' '+curY+revBadge+'</div>'
     +'<div>'+rows+'</div>'
     +(cmt?'<div class="ks-cmt">'+cmt+'</div>':'')
-    +(mgrNote?'<div class="ks-cmt" style="border-left:3px solid var(--am);background:var(--am-bg);color:var(--am)">📋 <b>Manager Note:</b> '+esc(mgrNote)+'</div>':'')
     +'<button class="vc-btn" data-dept="'+dept.id+'">View all charts →</button>';
 }
 
@@ -1509,36 +1487,26 @@ function fmtV(v,k){
   return String(Math.round(v));
 }
 
-function chartOpts(unit, deptId_arg, kpiKeys_arg, range_arg){
-  // kpiNotes: map of labelIndex → note string, built from range
+function chartOpts(unit){
   return{
     responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:false},tooltip:{callbacks:{
-      label:function(ctx){
-        var v=ctx.raw;if(v==null)return'No data';
-        if(unit==='%')return(Math.round(v*10)/10)+'%';
-        if(unit==='USD')return'$'+Math.round(v).toLocaleString();
-        if(unit==='hrs'||unit==='count'||unit==='cnt'||unit==='ppl')return Math.round(v).toLocaleString();
-        return(Math.round(v*100)/100).toString();
-      },
-      afterLabel:function(ctx){
-        // Show KPI note for this data point if available
-        if(!deptId_arg||!kpiKeys_arg||!range_arg)return null;
-        var dk=range_arg.dkeys[ctx.dataIndex];
-        if(!dk)return null;
-        var dsKey=ctx.dataset._kpiKey;
-        if(!dsKey)return null;
-        var note=getGSVal(deptId_arg,dk.y,dk.m,'note_'+dsKey);
-        return note?'📝 '+note:null;
-      }
-    }}},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){
+      var v=ctx.raw;if(v==null)return'No data';
+      // FIX #1: round tooltip values
+      if(unit==='%')return(Math.round(v*10)/10)+'%';
+      if(unit==='USD')return'$'+Math.round(v).toLocaleString();
+      if(unit==='hrs'||unit==='count'||unit==='cnt'||unit==='ppl')return Math.round(v).toLocaleString();
+      return(Math.round(v*100)/100).toString();
+    }}}},
     layout:{padding:{top:20}},
     scales:{
       y:{beginAtZero:false,grid:{color:'rgba(0,0,0,.05)'},
          afterDataLimits:function(axis){
            var range=axis.max-axis.min;
            var isCountUnit=unit==='count'||unit==='cnt'||unit==='ppl'||unit==='No.'||unit==='Rate';
+           // Pad TOP by 15% so datalabels above tallest bar are not clipped
            axis.max=axis.max+range*0.15;
+           // Bottom padding
            if(isCountUnit){axis.min=0;return;}
            if(axis.min>0)axis.min=Math.max(0,axis.min-range*0.10);
            else axis.min=axis.min-Math.abs(axis.min)*0.10;
@@ -1555,9 +1523,9 @@ function chartOpts(unit, deptId_arg, kpiKeys_arg, range_arg){
   };
 }
 
-function mkLine(id,labels,label,data,color,unit,deptId_arg,kpiKey,range_arg){
+function mkLine(id,labels,label,data,color,unit){
   var many=labels.length>24;
-  var opts=chartOpts(unit,deptId_arg,kpiKey,range_arg);
+  var opts=chartOpts(unit);
   opts.plugins.datalabels={
     display:!many,color:color,anchor:'end',align:'top',
     font:{size:9,weight:'600'},
@@ -1572,7 +1540,6 @@ function mkLine(id,labels,label,data,color,unit,deptId_arg,kpiKey,range_arg){
   return new Chart(document.getElementById(id),{
     type:'line',
     data:{labels:labels,datasets:[{label:label,data:data,
-      _kpiKey:kpiKey||null,
       borderColor:color,backgroundColor:color+'40',tension:.3,fill:true,
       borderWidth:2,
       pointRadius:many?2:4,pointBackgroundColor:color,
